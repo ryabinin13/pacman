@@ -10,7 +10,7 @@ class Pacman:
         self.x = x
         self.y = y
         self.size = 10
-        self.direction = 'right'
+        self.direction = 'k'
     def draw(self):
         pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)
     def move(self):
@@ -60,38 +60,42 @@ for j in range(0, COUNT_OF_WALL):
 
     for r in range(1, random_right):
         coord = [random_XY[0] + r * SIZE_ONE_CELL, random_XY[1]]
-        if coord[0] > SIZE:
+        if coord[0] > SIZE-100:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
     for l in range(1, random_left):
         coord = [random_XY[0] -l * SIZE_ONE_CELL, random_XY[1]]
-        if coord[0] < 0:
+        if coord[0] < 0+100:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
     for u in range(1, random_up):
         coord = [random_XY[0], random_XY[1] -u * SIZE_ONE_CELL]
-        if coord[1] < 0:
+        if coord[1] < 0+100:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
     for d in range(1, random_down):
         coord = [random_XY[0], random_XY[1] +d * SIZE_ONE_CELL]
-        if coord[1] > SIZE:
+        if coord[1] > SIZE-100:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
 
 walls_unique = list(set(tuple(w) for w in walls))
 
-i = 0
-while i < COUNT_OF_AWARDS:
+for awards in range(COUNT_OF_AWARDS):
+    cross = False
     random_XY = [random.randint(0, SIZE) for i in range(2)]
-    pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
-
-    i = i +1
-
+    random_XY = [random_XY[i] - random_XY[i] % SIZE_ONE_CELL for i in range(2)]
+    for wall in walls:
+        if random_XY == wall:
+            cross = True
+            break
+    if cross == False:
+        random_XY = [random_XY[i] + SIZE_ONE_CELL/2 for i in range(2)]
+        pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
 
 for i in range(SIZE):
     if i % SIZE_ONE_CELL == 0:
@@ -101,7 +105,6 @@ for i in range(SIZE):
 print(len(walls_unique))
 
 pacman.draw()
-
 
 pygame.display.flip()
 while True:
