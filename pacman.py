@@ -10,18 +10,43 @@ class Pacman:
         self.x = x
         self.y = y
         self.size = 10
-        self.direction = 'k'
+        self.direction = 'right'
     def draw(self):
         pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)
     def move(self):
+        pygame.draw.circle(sc, (0, 0, 0), (self.x, self.y), self.size)
         if self.direction == 'up':
-            self.y-= SIZE_ONE_CELL
+            # Проверяем, есть ли стена на пути движения вверх
+            for wall in walls:
+                if self.y - self.size >= wall[1]  and self.y - self.size <= wall[1] + 60 and self.x >= wall[0] and self.x <= wall[0] + 30:
+                    return
+            # Если стены нет, то изменяем координату y
+            if self.y > 0:
+                self.y -= SIZE_ONE_CELL
         elif self.direction == 'down':
-            self.y+=SIZE_ONE_CELL
+            # Проверяем, есть ли стена на пути движения вниз
+            for wall in walls:
+                if self.y + self.size >= wall[1] - 30 and self.y + self.size <= wall[1] + 30 and self.x >= wall[0] and self.x <= wall[0] + 30:
+                    return
+            # Если стены нет, то изменяем координату y
+            if self.y < SIZE - self.size:
+                self.y += SIZE_ONE_CELL
         elif self.direction == 'right':
-            self.x+=SIZE_ONE_CELL
+            # Проверяем, есть ли стена на пути движения вправо
+            for wall in walls_unique:
+                if self.x + self.size >= wall[0] - 30 and self.x + self.size <= wall[0] + 30 and self.y >= wall[1] and self.y <= wall[1] +30:
+                    return
+            # Если стены нет, то изменяем координату x
+            if self.x < SIZE - self.size:
+                self.x += SIZE_ONE_CELL
         elif self.direction == 'left':
-            self.x-=SIZE_ONE_CELL
+            # Проверяем, есть ли стена на пути движения влево
+            for wall in walls_unique:
+                if self.x - self.size >= wall[0] and self.x - self.size <= wall[0] + 60 and self.y >= wall[1] and self.y <= wall[1] + 30:
+                    return
+            # Если стены нет, то изменяем координату x
+            if self.x > 0:
+                self.x -= SIZE_ONE_CELL
 
 pacman = Pacman(315,315)
 
@@ -113,6 +138,16 @@ while True:
             exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
-                pacman.direction = 'right'
-    pacman.move()
+                pacman.direction = "right"
+                pacman.move()
+            elif event.key == pygame.K_LEFT:
+                pacman.direction = "left"
+                pacman.move()
+            elif event.key == pygame.K_UP:
+                pacman.direction = "up"
+                pacman.move()
+            elif event.key == pygame.K_DOWN:
+                pacman.direction = "down"
+                pacman.move()
     pacman.draw()
+    pygame.display.flip()
