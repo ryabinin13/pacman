@@ -1,16 +1,12 @@
 import pygame
 import random
-import pickle
-import itertools
-import numpy as np
-import math
 pygame.init()
 
 class Pacman:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.size = 10
+        self.size = 20
         self.direction = 'right'
     def draw(self):
         pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)
@@ -19,7 +15,7 @@ class Pacman:
         if self.direction == 'up':
             # Проверяем, есть ли стена на пути движения вверх
             for wall in walls:
-                if self.y - self.size >= wall[1]  and self.y - self.size <= wall[1] + 60 and self.x >= wall[0] and self.x <= wall[0] + 30:
+                if self.y - self.size >= wall[1]  and self.y - self.size <= wall[1] + SIZE_ONE_CELL*2 and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:
                     return
             if self.y <= SIZE_ONE_CELL:
                 return
@@ -29,7 +25,7 @@ class Pacman:
         elif self.direction == 'down':
             # Проверяем, есть ли стена на пути движения вниз
             for wall in walls:
-                if self.y + self.size >= wall[1] - 30 and self.y + self.size <= wall[1] + 30 and self.x >= wall[0] and self.x <= wall[0] + 30:
+                if self.y + self.size >= wall[1] - SIZE_ONE_CELL and self.y + self.size <= wall[1] + SIZE_ONE_CELL and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:
                     return
             if self.y >=SIZE-SIZE_ONE_CELL:
                 return
@@ -39,7 +35,7 @@ class Pacman:
         elif self.direction == 'right':
             # Проверяем, есть ли стена на пути движения вправо
             for wall in walls:
-                if self.x + self.size >= wall[0] - 30 and self.x + self.size <= wall[0] + 30 and self.y >= wall[1] and self.y <= wall[1] +30:
+                if self.x + self.size >= wall[0] - SIZE_ONE_CELL and self.x + self.size <= wall[0] + SIZE_ONE_CELL and self.y >= wall[1] and self.y <= wall[1] +SIZE_ONE_CELL:
                     return
             if self.x >=SIZE-SIZE_ONE_CELL:
                 return
@@ -49,7 +45,7 @@ class Pacman:
         elif self.direction == 'left':
             # Проверяем, есть ли стена на пути движения влево
             for wall in walls:
-                if self.x - self.size >= wall[0] and self.x - self.size <= wall[0] + 60 and self.y >= wall[1] and self.y <= wall[1] + 30:
+                if self.x - self.size >= wall[0] and self.x - self.size <= wall[0] + SIZE_ONE_CELL*2 and self.y >= wall[1] and self.y <= wall[1] + SIZE_ONE_CELL:
                     return
             if self.x <=SIZE_ONE_CELL:
                 return
@@ -85,13 +81,14 @@ def read_list_from_line(filename, line_number, separator=' '):
     except:
         print("Ошибка")
 
-SIZE = 600
 FPS = 60
-SIZE_ONE_CELL = 30
-COUNT_OF_WALL =5
+COUNT_OF_CELL = 11
+SIZE_ONE_CELL = 50
+SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
+COUNT_OF_WALL =4
 COUNT_OF_AWARDS = 10
 
-pacman = Pacman(315,315)
+pacman = Pacman(SIZE/2, SIZE/2)
 sc = pygame.display.set_mode((SIZE, SIZE))
 pygame.display.set_caption('pacman')
 clock = pygame.time.Clock()
@@ -106,34 +103,34 @@ for j in range(0, COUNT_OF_WALL):
     walls.append(random_XY)
 
     pygame.draw.rect(sc, (200,200,200), (random_XY[0], random_XY[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-    random_right, random_left, random_up, random_down = [random.randint(0,10) for _ in range(4)]
+    random_right, random_left, random_up, random_down = [random.randint(0,5) for _ in range(4)]
 
     for r in range(1, random_right):
         coord = [random_XY[0] + r * SIZE_ONE_CELL, random_XY[1]]
-        if coord[0] > SIZE-100:
+        if coord[0] > SIZE-SIZE_ONE_CELL:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
     for l in range(1, random_left):
         coord = [random_XY[0] -l * SIZE_ONE_CELL, random_XY[1]]
-        if coord[0] < 0+100:
+        if coord[0] < 0+SIZE_ONE_CELL:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
     for u in range(1, random_up):
         coord = [random_XY[0], random_XY[1] -u * SIZE_ONE_CELL]
-        if coord[1] < 0+100:
+        if coord[1] < 0+SIZE_ONE_CELL:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
     for d in range(1, random_down):
         coord = [random_XY[0], random_XY[1] +d * SIZE_ONE_CELL]
-        if coord[1] > SIZE-100:
+        if coord[1] > SIZE-SIZE_ONE_CELL:
             continue
         pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
         walls.append(coord)
 
-
+print(len(walls))
 # walls_ = read_list_from_line('maps.txt', 6)
 # walls = []
 # for w in walls_:
