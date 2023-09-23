@@ -1,3 +1,5 @@
+import math
+
 import pygame
 import random
 pygame.init()
@@ -62,7 +64,6 @@ def add_data_to_file(data, filename):
     except:
         print("Ошибка")
 
-
 def read_list_from_line(filename, line_number, separator=' '):
     result = []
     try:
@@ -81,11 +82,39 @@ def read_list_from_line(filename, line_number, separator=' '):
     except:
         print("Ошибка")
 
+def check_block(walls, random_XY):
+    for w1 in walls:
+        if (random_XY[0] - SIZE_ONE_CELL == w1[0]) and (random_XY[1] == w1[1]):
+            for w2 in walls:
+                if (random_XY[0] - SIZE_ONE_CELL == w2[0]) and (random_XY[1] - SIZE_ONE_CELL == w2[1]):
+                    for w3 in walls:
+                        if (random_XY[0] == w3[0]) and (random_XY[1] - SIZE_ONE_CELL == w3[1]):
+                            return True
+            for w4 in walls:
+                if (random_XY[0] - SIZE_ONE_CELL == w4[0]) and (random_XY[1] + SIZE_ONE_CELL == w4[1]):
+                    for w5 in walls:
+                        if (random_XY[0] == w5[0]) and (random_XY[1] + SIZE_ONE_CELL == w5[1]):
+                            return True
+    for w6 in walls:
+        if (random_XY[0] + SIZE_ONE_CELL == w6[0]) and (random_XY[1] == w6[1]):
+            for w7 in walls:
+                if (random_XY[0] + SIZE_ONE_CELL == w7[0]) and (random_XY[1] - SIZE_ONE_CELL == w7[1]):
+                    for w8 in walls:
+                        if (random_XY[0] == w8[0]) and (random_XY[1] - SIZE_ONE_CELL == w8[1]):
+                            return True
+            for w9 in walls:
+                if (random_XY[0] + SIZE_ONE_CELL == w9[0]) and (random_XY[1] + SIZE_ONE_CELL == w9[1]):
+                    for w10 in walls:
+                        if (random_XY[0] == w10[0]) and (random_XY[1] + SIZE_ONE_CELL == w10[1]):
+                            return True
+    return False
+
+
 FPS = 60
 COUNT_OF_CELL = 11
 SIZE_ONE_CELL = 50
 SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
-COUNT_OF_WALL =4
+COUNT_OF_WALL =8
 COUNT_OF_AWARDS = 10
 
 pacman = Pacman(SIZE/2, SIZE/2)
@@ -100,42 +129,51 @@ for j in range(0, COUNT_OF_WALL):
     random_XY = [random.randint(0, SIZE) for i in range(2)]
     random_XY = [random_XY[i] - random_XY[i] % SIZE_ONE_CELL for i in range(2)]
 
-    walls.append(random_XY)
 
-    pygame.draw.rect(sc, (200,200,200), (random_XY[0], random_XY[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-    random_right, random_left, random_up, random_down = [random.randint(0,5) for _ in range(4)]
+    if check_block(walls, random_XY) == False:
+        walls.append(random_XY)
+        pygame.draw.rect(sc, (200,200,200), (random_XY[0], random_XY[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+        random_right, random_left, random_up, random_down = [random.randint(0,4) for _ in range(4)]
+
 
     for r in range(1, random_right):
         coord = [random_XY[0] + r * SIZE_ONE_CELL, random_XY[1]]
         if coord[0] > SIZE-SIZE_ONE_CELL:
             continue
-        pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-        walls.append(coord)
+        elif check_block(walls, coord) == False:
+            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+            walls.append(coord)
+
     for l in range(1, random_left):
         coord = [random_XY[0] -l * SIZE_ONE_CELL, random_XY[1]]
         if coord[0] < 0+SIZE_ONE_CELL:
             continue
-        pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-        walls.append(coord)
+        elif check_block(walls, coord) == False:
+            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+            walls.append(coord)
     for u in range(1, random_up):
         coord = [random_XY[0], random_XY[1] -u * SIZE_ONE_CELL]
         if coord[1] < 0+SIZE_ONE_CELL:
             continue
-        pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-        walls.append(coord)
+        elif check_block(walls, coord) == False:
+            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+            walls.append(coord)
     for d in range(1, random_down):
         coord = [random_XY[0], random_XY[1] +d * SIZE_ONE_CELL]
         if coord[1] > SIZE-SIZE_ONE_CELL:
             continue
-        pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-        walls.append(coord)
+        elif check_block(walls, coord) == False:
+            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+            walls.append(coord)
 
-print(len(walls))
-# walls_ = read_list_from_line('maps.txt', 6)
-# walls = []
-# for w in walls_:
-#     walls.append(list(w))
 
+
+#walls_ = read_list_from_line('maps.txt', 8)
+#walls = []
+#for w in walls_:
+#    walls.append(list(w))
+walls_unique = list(set(tuple(w) for w in walls))
+print(len(walls_unique))
 
 for w in walls:
     pygame.draw.rect(sc, (200,200,200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
