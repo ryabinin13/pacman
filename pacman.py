@@ -1,8 +1,11 @@
 import math
-
+import time
 import pygame
 import random
 pygame.init()
+
+score = 0 #счетчик очков
+game_over_font = pygame.font.SysFont("Arial", 60)
 
 class Pacman:
     def __init__(self, x, y):
@@ -179,8 +182,9 @@ for w in walls:
     pygame.draw.rect(sc, (200,200,200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
 
 #строим награды
-awards_ = []
+awards = []
 for a in range(COUNT_OF_AWARDS):
+    score_font = pygame.font.SysFont("Arial", 24)
     cross = False
     random_XY = [random.randint(0, SIZE) for i in range(2)]
     random_XY = [int(random_XY[i] - random_XY[i] % SIZE_ONE_CELL) for i in range(2)]
@@ -191,13 +195,21 @@ for a in range(COUNT_OF_AWARDS):
     if cross == False:
         random_XY = [int(random_XY[i] + SIZE_ONE_CELL/2) for i in range(2)]
         pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
-        awards_.append((random_XY[0], random_XY[1]))
+        awards.append((random_XY[0], random_XY[1]))
 #строим клетки
 for i in range(SIZE):
     if i % SIZE_ONE_CELL == 0:
         pygame.draw.line(sc, (255,0,255), (0,i),(SIZE,i), 1)
         pygame.draw.line(sc, (255, 0, 255), (i,0), (i,SIZE), 1)
 
+def score_count():
+    global score
+    for a in awards:
+        if(int(a[0]) == pacman.x and int(a[1]) == pacman.y):
+            awards.remove(a)
+            score += 1
+    score_text = score_font.render("Счёт: {}".format(score), True, (255, 255, 255))  # для отображения
+    sc.blit(score_text, (2, 2))
 
 pacman.draw()
 
@@ -221,6 +233,7 @@ while True:
                 pacman.move()
             elif event.key == pygame.K_s:
                 add_data_to_file(walls, 'maps.txt')
-
+    pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
+    score_count()
     pacman.draw()
     pygame.display.flip()
