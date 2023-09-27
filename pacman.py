@@ -192,11 +192,11 @@ while( a != COUNT_OF_AWARDS ):
     for wall in walls:
         if random_XY == wall:
             cross = True
-    if a != 0:
-        if awards[a-1] == random_XY:
-           cross = True
+    random_XY = [int(random_XY[i] + SIZE_ONE_CELL / 2) for i in range(2)]
+    for aw in awards:
+        if random_XY[1] == aw[1] and random_XY[0] == aw[0]:
+            cross = True
     if cross == False:
-        random_XY = [int(random_XY[i] + SIZE_ONE_CELL/2) for i in range(2)]
         pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
         awards.append((random_XY[0], random_XY[1]))
         a += 1
@@ -221,6 +221,9 @@ pygame.display.flip()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            exit()
+        if score == COUNT_OF_AWARDS:
+            time.sleep(10)
             exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
