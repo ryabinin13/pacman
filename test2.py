@@ -101,11 +101,8 @@ while( a != COUNT_OF_AWARDS ):
     for wall in walls:
         if random_XY == wall:
             cross = True
-    random_XY = [int(random_XY[i] + SIZE_ONE_CELL / 2) for i in range(2)]
-    for aw in awards:
-        if random_XY[1] == aw[1] and random_XY[0] == aw[0]:
-            cross = True
     if cross == False:
+        random_XY = [int(random_XY[i] + SIZE_ONE_CELL/2) for i in range(2)]
         pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
         awards.append((random_XY[0], random_XY[1]))
         a += 1
@@ -126,13 +123,12 @@ def score_count():
 
 pacman.draw()
 
+
+
 pygame.display.flip()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            exit()
-        if score == COUNT_OF_AWARDS:
-            time.sleep(1)
             exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
@@ -147,7 +143,15 @@ while True:
             elif event.key == pygame.K_DOWN:
                 pacman.direction = "down"
                 pacman.move()
+            elif score == COUNT_OF_AWARDS - 1:
+                sc.fill((0, 0, 0))
+                game_over_text = game_over_font.render("Вы выиграли!", True, (255, 255, 255))  # для отображения
+                sc.blit(game_over_text, (350, 350))
+                time.sleep(1)
+                exit()
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
     pygame.display.flip()
+
+
