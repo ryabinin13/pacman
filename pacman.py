@@ -12,7 +12,7 @@ class Pacman:
         self.y = y
         self.size = 20
         self.direction = 'right'
-        self.visibility = 100
+        self.visibility = 75
 
     def draw(self):
         pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)
@@ -82,7 +82,7 @@ pygame.display.set_caption('pacman')
 #добавляем стены
 random_number_of_maps = random.randint(1,100)
 
-walls_ = read_list_from_line('maps.txt', random_number_of_maps)
+walls_ = read_list_from_line('maps.txt', 100)
 walls = []
 for w in walls_:
    walls.append(list(w))
@@ -138,7 +138,7 @@ def visibility():
     pygame.display.flip()
 
 create_map()
-visibility()
+#visibility()
 pygame.display.flip()
 while True:
     for event in pygame.event.get():
