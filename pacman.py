@@ -12,6 +12,7 @@ class Pacman:
         self.y = y
         self.size = 20
         self.direction = 'right'
+        self.visibility = 100
 
     def draw(self):
         pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)
@@ -50,6 +51,7 @@ class Pacman:
             if self.x > 0:
                 self.x -= SIZE_ONE_CELL
 
+#считываю из файла координаты стен
 def read_list_from_line(filename, line_number, separator=' '):
     result = []
     try:
@@ -67,7 +69,6 @@ def read_list_from_line(filename, line_number, separator=' '):
     except:
         print("Ошибка")
 
-FPS = 60
 COUNT_OF_CELL = 11
 SIZE_ONE_CELL = 50
 SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
@@ -77,18 +78,14 @@ COUNT_OF_AWARDS = 10
 pacman = Pacman(SIZE/2, SIZE/2)
 sc = pygame.display.set_mode((SIZE, SIZE))
 pygame.display.set_caption('pacman')
-clock = pygame.time.Clock()
 
-#строим стены
+#добавляем стены
 random_number_of_maps = random.randint(1,100)
 
 walls_ = read_list_from_line('maps.txt', random_number_of_maps)
 walls = []
 for w in walls_:
    walls.append(list(w))
-
-for w in walls:
-    pygame.draw.rect(sc, (200,200,200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
 
 #строим награды
 awards = []
@@ -106,14 +103,8 @@ while( a != COUNT_OF_AWARDS ):
         if random_XY[1] == aw[1] and random_XY[0] == aw[0]:
             cross = True
     if cross == False:
-        pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
         awards.append((random_XY[0], random_XY[1]))
         a += 1
-#строим клетки
-for i in range(SIZE):
-    if i % SIZE_ONE_CELL == 0:
-        pygame.draw.line(sc, (255,0,255), (0,i),(SIZE,i), 1)
-        pygame.draw.line(sc, (255, 0, 255), (i,0), (i,SIZE), 1)
 
 def score_count():
     global score
@@ -125,7 +116,29 @@ def score_count():
     sc.blit(score_text, (2, 2))
 
 pacman.draw()
+#коордитнаты пакманы в прошлые ходы
+def create_map():
+    #строю стены
+    for w in walls:
+        pygame.draw.rect(sc, (200, 200, 200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+    #строю награды
+    for award in awards:
+        pygame.draw.circle(sc, (50, 100, 150), (award[0], award[1]), SIZE_ONE_CELL / 4)
+    #строю клетки
+    for i in range(SIZE):
+        if i % SIZE_ONE_CELL == 0:
+            pygame.draw.line(sc, (255, 0, 255), (0, i), (SIZE, i), 1)
+            pygame.draw.line(sc, (255, 0, 255), (i, 0), (i, SIZE), 1)
+fog_of_war = pygame.Surface((SIZE, SIZE))
+fog_of_war.fill((0, 0, 0))
+def visibility():
+    pygame.draw.circle(fog_of_war, (60, 60, 60), (pacman.x, pacman.y), pacman.visibility, 0)
+    fog_of_war.set_colorkey((60, 60, 60))
+    sc.blit(fog_of_war, (0, 0))
+    pygame.display.flip()
 
+create_map()
+visibility()
 pygame.display.flip()
 while True:
     for event in pygame.event.get():
@@ -138,15 +151,23 @@ while True:
             if event.key == pygame.K_RIGHT:
                 pacman.direction = "right"
                 pacman.move()
+                create_map()
+                visibility()
             elif event.key == pygame.K_LEFT:
                 pacman.direction = "left"
                 pacman.move()
+                create_map()
+                visibility()
             elif event.key == pygame.K_UP:
                 pacman.direction = "up"
                 pacman.move()
+                create_map()
+                visibility()
             elif event.key == pygame.K_DOWN:
                 pacman.direction = "down"
                 pacman.move()
+                create_map()
+                visibility()
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
