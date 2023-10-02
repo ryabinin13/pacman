@@ -82,7 +82,7 @@ pygame.display.set_caption('pacman')
 #добавляем стены
 random_number_of_maps = random.randint(1,100)
 
-walls_ = read_list_from_line('maps.txt', 100)
+walls_ = read_list_from_line('maps.txt', random_number_of_maps)
 walls = []
 for w in walls_:
    walls.append(list(w))
@@ -136,9 +136,47 @@ def visibility():
     fog_of_war.set_colorkey((60, 60, 60))
     sc.blit(fog_of_war, (0, 0))
     pygame.display.flip()
+def move_alghoritm():
+    for award in awards:
+        if int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y:
+            print(1)
+            return 'l'
+        elif int(award[0]) == pacman.x + SIZE_ONE_CELL and int(award[1]) == pacman.y:
+            print(1)
+            return 'r'
+        elif int(award[0]) == pacman.x and int(award[1]) == pacman.y - SIZE_ONE_CELL:
+            print(1)
+            return 'u'
+        elif int(award[0]) == pacman.x and int(award[1]) == pacman.y + SIZE_ONE_CELL:
+            print(1)
+            return 'd'
+        elif int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y - SIZE_ONE_CELL:
+            if walls.count([pacman.x - 25, pacman.y - 75]):
+                return 'l'
+            else:
+                return 'u'
+        elif int(award[0]) == pacman.x + SIZE_ONE_CELL and int(award[1]) == pacman.y + SIZE_ONE_CELL:
+            if walls.count([pacman.x - 25, pacman.y + 75]):
+                return 'r'
+            else:
+                return 'd'
+        elif int(award[0]) == pacman.x + SIZE_ONE_CELL and int(award[1]) == pacman.y - SIZE_ONE_CELL:
+            if walls.count([pacman.x - 25, pacman.y - 75]):
+                return 'r'
+            else:
+                return 'u'
+        elif int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y + SIZE_ONE_CELL:
+            if walls.count([pacman.x - 25, pacman.y + 75]):
+                return 'l'
+            else:
+                return 'd'
+
+    move = random.randint(1, 4)
+    directions = {1: 'r', 2: 'l', 3: 'u', 4: 'd'}
+    return directions[move]
 
 create_map()
-#visibility()
+visibility()
 pygame.display.flip()
 while True:
     for event in pygame.event.get():
@@ -168,6 +206,18 @@ while True:
                 pacman.move()
                 create_map()
                 visibility()
+            elif event.key == pygame.K_SPACE:
+                for i in range(200):
+                    move = move_alghoritm()
+                    directions = {'r' : "right", 'l' :"left", 'u':"up", 'd':"down"}
+                    pacman.direction = directions[move]
+                    pacman.move()
+                    create_map()
+                    visibility()
+                    score_count()
+                    pacman.draw()
+                    pygame.display.flip()
+                    #pygame.time.delay(500)
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
