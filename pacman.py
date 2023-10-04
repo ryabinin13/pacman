@@ -132,23 +132,20 @@ def create_map():
 fog_of_war = pygame.Surface((SIZE, SIZE))
 fog_of_war.fill((0, 0, 0))
 def visibility():
-    pygame.draw.circle(fog_of_war, (60, 60, 60), (pacman.x, pacman.y), pacman.visibility, 0)
+    pygame.draw.rect(fog_of_war, (60, 60, 60), (pacman.x-pacman.visibility, pacman.y-pacman.visibility,pacman.visibility*2, pacman.visibility*2), 0)
     fog_of_war.set_colorkey((60, 60, 60))
     sc.blit(fog_of_war, (0, 0))
     pygame.display.flip()
+
 def move_alghoritm():
     for award in awards:
         if int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y:
-            print(1)
             return 'l'
         elif int(award[0]) == pacman.x + SIZE_ONE_CELL and int(award[1]) == pacman.y:
-            print(1)
             return 'r'
         elif int(award[0]) == pacman.x and int(award[1]) == pacman.y - SIZE_ONE_CELL:
-            print(1)
-            return 'u'
+            return  'u'
         elif int(award[0]) == pacman.x and int(award[1]) == pacman.y + SIZE_ONE_CELL:
-            print(1)
             return 'd'
         elif int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y - SIZE_ONE_CELL:
             if walls.count([pacman.x - 25, pacman.y - 75]):
@@ -171,9 +168,24 @@ def move_alghoritm():
             else:
                 return 'd'
 
-    move = random.randint(1, 4)
-    directions = {1: 'r', 2: 'l', 3: 'u', 4: 'd'}
-    return directions[move]
+
+
+    while True:
+        move = random.randint(1, 4)
+        if move == 1:
+            if walls.count([pacman.x + 25, pacman.y - 25]) or pacman.x >= SIZE - SIZE_ONE_CELL:
+                continue
+        if move == 2:
+            if walls.count([pacman.x - 75, pacman.y - 25]) or pacman.x <= 0 + SIZE_ONE_CELL:
+                continue
+        if move == 3:
+            if walls.count([pacman.x - 25, pacman.y - 75]) or pacman.y <= 0 +SIZE_ONE_CELL:
+                continue
+        if move == 4:
+            if walls.count([pacman.x - 25, pacman.y + 25]) or pacman.y >= SIZE - SIZE_ONE_CELL:
+                continue
+        directions = {1: 'r', 2: 'l', 3: 'u', 4: 'd'}
+        return directions[move]
 
 create_map()
 visibility()
@@ -217,7 +229,7 @@ while True:
                     score_count()
                     pacman.draw()
                     pygame.display.flip()
-                    #pygame.time.delay(500)
+                    pygame.time.delay(200)
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
