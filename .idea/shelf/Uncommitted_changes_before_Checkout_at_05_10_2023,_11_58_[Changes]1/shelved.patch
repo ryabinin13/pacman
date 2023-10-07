@@ -1,0 +1,427 @@
+Index: pacman.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import math\nimport time\nimport pygame\nimport random\npygame.init()\n\nscore = 0 #счетчик очков\ngame_over_font = pygame.font.SysFont(\"Arial\", 60)\n\nclass Pacman:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n        self.size = 20\n        self.direction = 'right'\n    def draw(self):\n        pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)\n    def move(self):\n        pygame.draw.circle(sc, (0, 0, 0), (self.x, self.y), self.size)\n        if self.direction == 'up':\n            # Проверяем, есть ли стена на пути движения вверх\n            for wall in walls:\n                if self.y - self.size >= wall[1]  and self.y - self.size <= wall[1] + SIZE_ONE_CELL*2 and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:\n                    return\n            if self.y <= SIZE_ONE_CELL:\n                return\n            # Если стены нет, то изменяем координату y\n            if self.y > 0:\n                self.y -= SIZE_ONE_CELL\n        elif self.direction == 'down':\n            # Проверяем, есть ли стена на пути движения вниз\n            for wall in walls:\n                if self.y + self.size >= wall[1] - SIZE_ONE_CELL and self.y + self.size <= wall[1] + SIZE_ONE_CELL and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:\n                    return\n            if self.y >=SIZE-SIZE_ONE_CELL:\n                return\n            # Если стены нет, то изменяем координату y\n            if self.y < SIZE - self.size:\n                self.y += SIZE_ONE_CELL\n        elif self.direction == 'right':\n            # Проверяем, есть ли стена на пути движения вправо\n            for wall in walls:\n                if self.x + self.size >= wall[0] - SIZE_ONE_CELL and self.x + self.size <= wall[0] + SIZE_ONE_CELL and self.y >= wall[1] and self.y <= wall[1] +SIZE_ONE_CELL:\n                    return\n            if self.x >=SIZE-SIZE_ONE_CELL:\n                return\n            # Если стены нет, то изменяем координату x\n            if self.x < SIZE - self.size:\n                self.x += SIZE_ONE_CELL\n        elif self.direction == 'left':\n            # Проверяем, есть ли стена на пути движения влево\n            for wall in walls:\n                if self.x - self.size >= wall[0] and self.x - self.size <= wall[0] + SIZE_ONE_CELL*2 and self.y >= wall[1] and self.y <= wall[1] + SIZE_ONE_CELL:\n                    return\n            if self.x <=SIZE_ONE_CELL:\n                return\n            # Если стены нет, то изменяем координату x\n            if self.x > 0:\n                self.x -= SIZE_ONE_CELL\n\ndef add_data_to_file(data, filename):\n    try:\n        with open(filename, 'a') as file:\n            for d in data:\n                file.write(str(d) + ' ')\n            file.write('\\n')\n    except:\n        print(\"Ошибка\")\n\ndef read_list_from_line(filename, line_number, separator=' '):\n    result = []\n    try:\n        with open(filename, 'r') as file:\n            lines = file.readlines()\n            line = lines[line_number-1].strip()\n            list_data = line.split(separator)\n            formatted_list = [x for x in list_data]\n            for item in formatted_list:\n                item = item.replace('[', '').replace(']', '')\n                result.append(item)\n                res = [int(item.replace(',', '')) for item in result]\n                r = list(zip(res[::2], res[1::2]))\n            return r\n\n    except:\n        print(\"Ошибка\")\n\ndef check_block(walls, random_XY):\n    for w1 in walls:\n        if (random_XY[0] - SIZE_ONE_CELL == w1[0]) and (random_XY[1] == w1[1]):\n            for w2 in walls:\n                if (random_XY[0] - SIZE_ONE_CELL == w2[0]) and (random_XY[1] - SIZE_ONE_CELL == w2[1]):\n                    for w3 in walls:\n                        if (random_XY[0] == w3[0]) and (random_XY[1] - SIZE_ONE_CELL == w3[1]):\n                            return True\n            for w4 in walls:\n                if (random_XY[0] - SIZE_ONE_CELL == w4[0]) and (random_XY[1] + SIZE_ONE_CELL == w4[1]):\n                    for w5 in walls:\n                        if (random_XY[0] == w5[0]) and (random_XY[1] + SIZE_ONE_CELL == w5[1]):\n                            return True\n    for w6 in walls:\n        if (random_XY[0] + SIZE_ONE_CELL == w6[0]) and (random_XY[1] == w6[1]):\n            for w7 in walls:\n                if (random_XY[0] + SIZE_ONE_CELL == w7[0]) and (random_XY[1] - SIZE_ONE_CELL == w7[1]):\n                    for w8 in walls:\n                        if (random_XY[0] == w8[0]) and (random_XY[1] - SIZE_ONE_CELL == w8[1]):\n                            return True\n            for w9 in walls:\n                if (random_XY[0] + SIZE_ONE_CELL == w9[0]) and (random_XY[1] + SIZE_ONE_CELL == w9[1]):\n                    for w10 in walls:\n                        if (random_XY[0] == w10[0]) and (random_XY[1] + SIZE_ONE_CELL == w10[1]):\n                            return True\n    return False\n\n\nFPS = 60\nCOUNT_OF_CELL = 11\nSIZE_ONE_CELL = 50\nSIZE = COUNT_OF_CELL * SIZE_ONE_CELL\nCOUNT_OF_WALL =8\nCOUNT_OF_AWARDS = 10\n\npacman = Pacman(SIZE/2, SIZE/2)\nsc = pygame.display.set_mode((SIZE, SIZE))\npygame.display.set_caption('pacman')\nclock = pygame.time.Clock()\n\nwalls = []\n#строим стены\n\nfor j in range(0, COUNT_OF_WALL):\n    random_XY = [random.randint(0, SIZE) for i in range(2)]\n    random_XY = [random_XY[i] - random_XY[i] % SIZE_ONE_CELL for i in range(2)]\n\n\n    if check_block(walls, random_XY) == False:\n        walls.append(random_XY)\n        pygame.draw.rect(sc, (200,200,200), (random_XY[0], random_XY[1], SIZE_ONE_CELL, SIZE_ONE_CELL))\n        random_right, random_left, random_up, random_down = [random.randint(0,4) for _ in range(4)]\n\n\n    for r in range(1, random_right):\n        coord = [random_XY[0] + r * SIZE_ONE_CELL, random_XY[1]]\n        if coord[0] > SIZE-SIZE_ONE_CELL:\n            continue\n        elif check_block(walls, coord) == False:\n            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))\n            walls.append(coord)\n\n    for l in range(1, random_left):\n        coord = [random_XY[0] -l * SIZE_ONE_CELL, random_XY[1]]\n        if coord[0] < 0+SIZE_ONE_CELL:\n            continue\n        elif check_block(walls, coord) == False:\n            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))\n            walls.append(coord)\n    for u in range(1, random_up):\n        coord = [random_XY[0], random_XY[1] -u * SIZE_ONE_CELL]\n        if coord[1] < 0+SIZE_ONE_CELL:\n            continue\n        elif check_block(walls, coord) == False:\n            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))\n            walls.append(coord)\n    for d in range(1, random_down):\n        coord = [random_XY[0], random_XY[1] +d * SIZE_ONE_CELL]\n        if coord[1] > SIZE-SIZE_ONE_CELL:\n            continue\n        elif check_block(walls, coord) == False:\n            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))\n            walls.append(coord)\n\n\n\n#walls_ = read_list_from_line('maps.txt', 8)\n#walls = []\n#for w in walls_:\n#    walls.append(list(w))\nwalls_unique = list(set(tuple(w) for w in walls))\nprint(len(walls_unique))\n\nfor w in walls:\n    pygame.draw.rect(sc, (200,200,200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))\n\n#строим награды\nawards = []\nscore_font = pygame.font.SysFont(\"Arial\", 24)\na = 0\nwhile( a != COUNT_OF_AWARDS ):\n    cross = False\n    random_XY = [random.randint(0, SIZE) for i in range(2)]\n    random_XY = [int(random_XY[i] - random_XY[i] % SIZE_ONE_CELL) for i in range(2)]\n    for wall in walls:\n        if random_XY == wall:\n            cross = True\n    random_XY = [int(random_XY[i] + SIZE_ONE_CELL / 2) for i in range(2)]\n    for aw in awards:\n        if random_XY[1] == aw[1] and random_XY[0] == aw[0]:\n            cross = True\n    if cross == False:\n        pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)\n        awards.append((random_XY[0], random_XY[1]))\n        a += 1\n#строим клетки\nfor i in range(SIZE):\n    if i % SIZE_ONE_CELL == 0:\n        pygame.draw.line(sc, (255,0,255), (0,i),(SIZE,i), 1)\n        pygame.draw.line(sc, (255, 0, 255), (i,0), (i,SIZE), 1)\n\ndef score_count():\n    global score\n    for a in awards:\n        if(int(a[0]) == pacman.x and int(a[1]) == pacman.y):\n            awards.remove(a)\n            score += 1\n    score_text = score_font.render(\"Счёт: {}\".format(score), True, (255, 255, 255))  # для отображения\n    sc.blit(score_text, (2, 2))\n\npacman.draw()\n\npygame.display.flip()\nwhile True:\n    for event in pygame.event.get():\n        if event.type == pygame.QUIT:\n            exit()\n        if score == COUNT_OF_AWARDS:\n            time.sleep(10)\n            exit()\n        elif event.type == pygame.KEYDOWN:\n            if event.key == pygame.K_RIGHT:\n                pacman.direction = \"right\"\n                pacman.move()\n            elif event.key == pygame.K_LEFT:\n                pacman.direction = \"left\"\n                pacman.move()\n            elif event.key == pygame.K_UP:\n                pacman.direction = \"up\"\n                pacman.move()\n            elif event.key == pygame.K_DOWN:\n                pacman.direction = \"down\"\n                pacman.move()\n            elif event.key == pygame.K_s:\n                add_data_to_file(walls, 'maps.txt')\n    pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))\n    score_count()\n    pacman.draw()\n    pygame.display.flip()
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pacman.py b/pacman.py
+--- a/pacman.py	
++++ b/pacman.py	
+@@ -1,4 +1,3 @@
+-import math
+ import time
+ import pygame
+ import random
+@@ -13,60 +12,46 @@
+         self.y = y
+         self.size = 20
+         self.direction = 'right'
++        self.visibility = 75
++
+     def draw(self):
+         pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)
+     def move(self):
+         pygame.draw.circle(sc, (0, 0, 0), (self.x, self.y), self.size)
+         if self.direction == 'up':
+-            # Проверяем, есть ли стена на пути движения вверх
+             for wall in walls:
+                 if self.y - self.size >= wall[1]  and self.y - self.size <= wall[1] + SIZE_ONE_CELL*2 and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:
+                     return
+             if self.y <= SIZE_ONE_CELL:
+                 return
+-            # Если стены нет, то изменяем координату y
+             if self.y > 0:
+                 self.y -= SIZE_ONE_CELL
+         elif self.direction == 'down':
+-            # Проверяем, есть ли стена на пути движения вниз
+             for wall in walls:
+                 if self.y + self.size >= wall[1] - SIZE_ONE_CELL and self.y + self.size <= wall[1] + SIZE_ONE_CELL and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:
+                     return
+             if self.y >=SIZE-SIZE_ONE_CELL:
+                 return
+-            # Если стены нет, то изменяем координату y
+             if self.y < SIZE - self.size:
+                 self.y += SIZE_ONE_CELL
+         elif self.direction == 'right':
+-            # Проверяем, есть ли стена на пути движения вправо
+             for wall in walls:
+                 if self.x + self.size >= wall[0] - SIZE_ONE_CELL and self.x + self.size <= wall[0] + SIZE_ONE_CELL and self.y >= wall[1] and self.y <= wall[1] +SIZE_ONE_CELL:
+                     return
+             if self.x >=SIZE-SIZE_ONE_CELL:
+                 return
+-            # Если стены нет, то изменяем координату x
+             if self.x < SIZE - self.size:
+                 self.x += SIZE_ONE_CELL
+         elif self.direction == 'left':
+-            # Проверяем, есть ли стена на пути движения влево
+             for wall in walls:
+                 if self.x - self.size >= wall[0] and self.x - self.size <= wall[0] + SIZE_ONE_CELL*2 and self.y >= wall[1] and self.y <= wall[1] + SIZE_ONE_CELL:
+                     return
+             if self.x <=SIZE_ONE_CELL:
+                 return
+-            # Если стены нет, то изменяем координату x
+             if self.x > 0:
+                 self.x -= SIZE_ONE_CELL
+ 
+-def add_data_to_file(data, filename):
+-    try:
+-        with open(filename, 'a') as file:
+-            for d in data:
+-                file.write(str(d) + ' ')
+-            file.write('\n')
+-    except:
+-        print("Ошибка")
+-
++#считываю из файла координаты стен
+ def read_list_from_line(filename, line_number, separator=' '):
+     result = []
+     try:
+@@ -81,39 +66,9 @@
+                 res = [int(item.replace(',', '')) for item in result]
+                 r = list(zip(res[::2], res[1::2]))
+             return r
+-
+     except:
+         print("Ошибка")
+ 
+-def check_block(walls, random_XY):
+-    for w1 in walls:
+-        if (random_XY[0] - SIZE_ONE_CELL == w1[0]) and (random_XY[1] == w1[1]):
+-            for w2 in walls:
+-                if (random_XY[0] - SIZE_ONE_CELL == w2[0]) and (random_XY[1] - SIZE_ONE_CELL == w2[1]):
+-                    for w3 in walls:
+-                        if (random_XY[0] == w3[0]) and (random_XY[1] - SIZE_ONE_CELL == w3[1]):
+-                            return True
+-            for w4 in walls:
+-                if (random_XY[0] - SIZE_ONE_CELL == w4[0]) and (random_XY[1] + SIZE_ONE_CELL == w4[1]):
+-                    for w5 in walls:
+-                        if (random_XY[0] == w5[0]) and (random_XY[1] + SIZE_ONE_CELL == w5[1]):
+-                            return True
+-    for w6 in walls:
+-        if (random_XY[0] + SIZE_ONE_CELL == w6[0]) and (random_XY[1] == w6[1]):
+-            for w7 in walls:
+-                if (random_XY[0] + SIZE_ONE_CELL == w7[0]) and (random_XY[1] - SIZE_ONE_CELL == w7[1]):
+-                    for w8 in walls:
+-                        if (random_XY[0] == w8[0]) and (random_XY[1] - SIZE_ONE_CELL == w8[1]):
+-                            return True
+-            for w9 in walls:
+-                if (random_XY[0] + SIZE_ONE_CELL == w9[0]) and (random_XY[1] + SIZE_ONE_CELL == w9[1]):
+-                    for w10 in walls:
+-                        if (random_XY[0] == w10[0]) and (random_XY[1] + SIZE_ONE_CELL == w10[1]):
+-                            return True
+-    return False
+-
+-
+-FPS = 60
+ COUNT_OF_CELL = 11
+ SIZE_ONE_CELL = 50
+ SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
+@@ -123,63 +78,14 @@
+ pacman = Pacman(SIZE/2, SIZE/2)
+ sc = pygame.display.set_mode((SIZE, SIZE))
+ pygame.display.set_caption('pacman')
+-clock = pygame.time.Clock()
+ 
++#добавляем стены
++random_number_of_maps = random.randint(1,100)
++
++walls_ = read_list_from_line('maps.txt', random_number_of_maps)
+ walls = []
+-#строим стены
+-
+-for j in range(0, COUNT_OF_WALL):
+-    random_XY = [random.randint(0, SIZE) for i in range(2)]
+-    random_XY = [random_XY[i] - random_XY[i] % SIZE_ONE_CELL for i in range(2)]
+-
+-
+-    if check_block(walls, random_XY) == False:
+-        walls.append(random_XY)
+-        pygame.draw.rect(sc, (200,200,200), (random_XY[0], random_XY[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+-        random_right, random_left, random_up, random_down = [random.randint(0,4) for _ in range(4)]
+-
+-
+-    for r in range(1, random_right):
+-        coord = [random_XY[0] + r * SIZE_ONE_CELL, random_XY[1]]
+-        if coord[0] > SIZE-SIZE_ONE_CELL:
+-            continue
+-        elif check_block(walls, coord) == False:
+-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+-            walls.append(coord)
+-
+-    for l in range(1, random_left):
+-        coord = [random_XY[0] -l * SIZE_ONE_CELL, random_XY[1]]
+-        if coord[0] < 0+SIZE_ONE_CELL:
+-            continue
+-        elif check_block(walls, coord) == False:
+-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+-            walls.append(coord)
+-    for u in range(1, random_up):
+-        coord = [random_XY[0], random_XY[1] -u * SIZE_ONE_CELL]
+-        if coord[1] < 0+SIZE_ONE_CELL:
+-            continue
+-        elif check_block(walls, coord) == False:
+-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+-            walls.append(coord)
+-    for d in range(1, random_down):
+-        coord = [random_XY[0], random_XY[1] +d * SIZE_ONE_CELL]
+-        if coord[1] > SIZE-SIZE_ONE_CELL:
+-            continue
+-        elif check_block(walls, coord) == False:
+-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+-            walls.append(coord)
+-
+-
+-
+-#walls_ = read_list_from_line('maps.txt', 8)
+-#walls = []
+-#for w in walls_:
+-#    walls.append(list(w))
+-walls_unique = list(set(tuple(w) for w in walls))
+-print(len(walls_unique))
+-
+-for w in walls:
+-    pygame.draw.rect(sc, (200,200,200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
++for w in walls_:
++   walls.append(list(w))
+ 
+ #строим награды
+ awards = []
+@@ -197,14 +103,8 @@
+         if random_XY[1] == aw[1] and random_XY[0] == aw[0]:
+             cross = True
+     if cross == False:
+-        pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
+         awards.append((random_XY[0], random_XY[1]))
+         a += 1
+-#строим клетки
+-for i in range(SIZE):
+-    if i % SIZE_ONE_CELL == 0:
+-        pygame.draw.line(sc, (255,0,255), (0,i),(SIZE,i), 1)
+-        pygame.draw.line(sc, (255, 0, 255), (i,0), (i,SIZE), 1)
+ 
+ def score_count():
+     global score
+@@ -216,30 +116,108 @@
+     sc.blit(score_text, (2, 2))
+ 
+ pacman.draw()
+-
++#коордитнаты пакманы в прошлые ходы
++def create_map():
++    #строю стены
++    for w in walls:
++        pygame.draw.rect(sc, (200, 200, 200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
++    #строю награды
++    for award in awards:
++        pygame.draw.circle(sc, (50, 100, 150), (award[0], award[1]), SIZE_ONE_CELL / 4)
++    #строю клетки
++    for i in range(SIZE):
++        if i % SIZE_ONE_CELL == 0:
++            pygame.draw.line(sc, (255, 0, 255), (0, i), (SIZE, i), 1)
++            pygame.draw.line(sc, (255, 0, 255), (i, 0), (i, SIZE), 1)
++fog_of_war = pygame.Surface((SIZE, SIZE))
++fog_of_war.fill((0, 0, 0))
++def visibility():
++    pygame.draw.circle(fog_of_war, (60, 60, 60), (pacman.x, pacman.y), pacman.visibility, 0)
++    fog_of_war.set_colorkey((60, 60, 60))
++    sc.blit(fog_of_war, (0, 0))
++    pygame.display.flip()
++def move_alghoritm():
++    for award in awards:
++        if int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y:
++            print(1)
++            return 'l'
++        elif int(award[0]) == pacman.x + SIZE_ONE_CELL and int(award[1]) == pacman.y:
++            print(1)
++            return 'r'
++        elif int(award[0]) == pacman.x and int(award[1]) == pacman.y - SIZE_ONE_CELL:
++            print(1)
++            return 'u'
++        elif int(award[0]) == pacman.x and int(award[1]) == pacman.y + SIZE_ONE_CELL:
++            print(1)
++            return 'd'
++        elif int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y - SIZE_ONE_CELL:
++            if walls.count([pacman.x - 25, pacman.y - 75]):
++                return 'l'
++            else:
++                return 'u'
++        elif int(award[0]) == pacman.x + SIZE_ONE_CELL and int(award[1]) == pacman.y + SIZE_ONE_CELL:
++            if walls.count([pacman.x - 25, pacman.y + 75]):
++                return 'r'
++            else:
++                return 'd'
++        elif int(award[0]) == pacman.x + SIZE_ONE_CELL and int(award[1]) == pacman.y - SIZE_ONE_CELL:
++            if walls.count([pacman.x - 25, pacman.y - 75]):
++                return 'r'
++            else:
++                return 'u'
++        elif int(award[0]) == pacman.x - SIZE_ONE_CELL and int(award[1]) == pacman.y + SIZE_ONE_CELL:
++            if walls.count([pacman.x - 25, pacman.y + 75]):
++                return 'l'
++            else:
++                return 'd'
++
++    move = random.randint(1, 4)
++    directions = {1: 'r', 2: 'l', 3: 'u', 4: 'd'}
++    return directions[move]
++
++create_map()
++visibility()
+ pygame.display.flip()
+ while True:
+     for event in pygame.event.get():
+         if event.type == pygame.QUIT:
+             exit()
+         if score == COUNT_OF_AWARDS:
+-            time.sleep(10)
++            time.sleep(1)
+             exit()
+         elif event.type == pygame.KEYDOWN:
+             if event.key == pygame.K_RIGHT:
+                 pacman.direction = "right"
+                 pacman.move()
++                create_map()
++                visibility()
+             elif event.key == pygame.K_LEFT:
+                 pacman.direction = "left"
+                 pacman.move()
++                create_map()
++                visibility()
+             elif event.key == pygame.K_UP:
+                 pacman.direction = "up"
+                 pacman.move()
++                create_map()
++                visibility()
+             elif event.key == pygame.K_DOWN:
+                 pacman.direction = "down"
+                 pacman.move()
+-            elif event.key == pygame.K_s:
+-                add_data_to_file(walls, 'maps.txt')
++                create_map()
++                visibility()
++            elif event.key == pygame.K_SPACE:
++                for i in range(200):
++                    move = move_alghoritm()
++                    directions = {'r' : "right", 'l' :"left", 'u':"up", 'd':"down"}
++                    pacman.direction = directions[move]
++                    pacman.move()
++                    create_map()
++                    visibility()
++                    score_count()
++                    pacman.draw()
++                    pygame.display.flip()
++                    #pygame.time.delay(500)
+     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
+     score_count()
+     pacman.draw()
+Index: maps.txt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/maps.txt b/maps.txt
+new file mode 100644
+--- /dev/null	
++++ b/maps.txt	
+@@ -0,0 +1,100 @@
++[200, 50] [250, 50] [500, 450] [500, 500] [350, 350] [300, 350] [250, 350] [200, 350] [150, 350] [450, 100] [400, 100] [350, 100] [450, 50] [450, 150] [450, 200] [100, 200] [150, 200] [200, 200] [250, 200] [300, 200] [50, 200] [100, 250] [0, 200] [50, 200] [100, 200] [150, 200] [200, 200] [0, 150] [0, 250] [300, 450] [250, 450] [200, 450] [300, 400] [300, 350] [300, 500] [50, 50] [0, 50] [50, 350] [50, 400] [50, 450] [400, 450] [450, 400] [450, 450] [450, 350]
++[0, 200] [50, 200] [0, 150] [0, 100] [0, 200] [0, 150] [0, 100] [0, 250] [0, 300] [0, 350] [0, 500] [50, 500] [300, 200] [250, 200] [200, 200] [300, 250] [300, 300] [300, 350] [100, 50] [150, 50] [250, 400] [300, 400] [200, 400] [250, 450] [250, 500] [500, 100] [400, 100] [450, 100] [500, 100] [350, 100] [300, 100] [400, 50] [100, 300] [100, 350] [100, 400] [450, 350] [450, 300] [450, 250] [450, 400] [400, 400] [400, 250] [200, 300]
++[400, 350] [450, 350] [350, 350] [300, 350] [250, 350] [50, 350] [100, 350] [150, 350] [50, 400] [250, 50] [200, 50] [150, 50] [50, 500] [50, 450] [50, 400] [50, 350] [300, 100] [300, 150] [300, 200] [300, 250] [300, 250] [350, 250] [400, 250] [450, 250] [300, 200] [50, 100] [100, 100] [50, 150] [50, 200] [50, 250] [150, 450] [200, 450] [250, 450] [300, 450] [300, 500] [350, 450] [400, 450] [450, 450] [450, 50] [450, 100] [400, 100] [400, 150] [150, 150] [150, 200] [200, 250] [150, 100] [150, 250]
++[50, 50] [100, 50] [450, 400] [200, 50] [50, 100] [450, 0] [500, 0] [400, 0] [350, 0] [450, 50] [450, 100] [450, 150] [450, 450] [250, 100] [50, 100] [100, 50] [100, 150] [100, 200] [100, 250] [150, 300] [150, 250] [150, 350] [150, 400] [150, 450] [300, 0] [350, 0] [250, 0] [200, 0] [0, 50] [100, 250] [100, 350] [150, 300] [200, 300] [250, 300] [300, 300] [150, 250] [150, 350] [300, 150] [300, 200] [350, 100] [400, 250] [400, 300] [250, 400] [250, 450] [300, 450] [350, 400] [350, 450] [0, 450] [50, 450] [200, 100] [300, 100] [50, 150]
++[100, 350] [100, 300] [500, 50] [450, 50] [500, 100] [500, 150] [100, 150] [50, 150] [500, 350] [500, 300] [500, 400] [500, 450] [500, 500] [450, 350] [500, 350] [400, 350] [350, 350] [450, 250] [350, 400] [350, 350] [350, 300] [350, 250] [350, 500] [300, 500] [50, 350] [100, 350] [150, 350] [50, 250] [50, 400] [0, 50] [50, 50] [100, 50] [150, 50] [200, 50] [250, 50] [300, 50] [200, 100] [200, 150] [200, 200] [200, 250] [250, 150] [300, 150] [350, 150] [50, 450] [100, 450] [150, 450] [200, 450] [200, 350] [100, 250] [500, 250]
++[50, 500] [100, 500] [150, 500] [200, 500] [350, 400] [300, 400] [250, 400] [350, 350] [350, 300] [400, 150] [350, 150] [400, 100] [400, 200] [400, 250] [0, 400] [50, 400] [50, 150] [100, 150] [50, 350] [100, 350] [150, 350] [50, 400] [450, 50] [500, 50] [400, 50] [450, 150] [50, 200] [50, 150] [50, 100] [200, 0] [200, 50] [200, 100] [200, 150] [200, 200] [200, 250] [250, 100] [250, 200] [350, 450] [400, 450] [450, 450] [50, 250] [400, 300]
++[200, 300] [250, 300] [300, 300] [350, 300] [150, 300] [250, 100] [300, 100] [350, 100] [400, 100] [200, 100] [150, 100] [250, 50] [350, 500] [400, 500] [450, 500] [300, 500] [250, 500] [200, 500] [100, 0] [150, 0] [50, 0] [100, 50] [100, 100] [100, 150] [350, 50] [250, 50] [300, 100] [300, 150] [300, 200] [0, 300] [50, 300] [0, 250] [0, 350] [0, 400] [450, 500] [400, 500] [350, 500] [300, 500] [450, 450] [250, 50] [300, 100] [100, 400] [150, 400] [200, 400] [200, 450] [250, 400] [300, 400] [350, 400] [450, 200] [450, 250] [450, 300] [100, 200]
++[500, 100] [500, 150] [500, 200] [500, 250] [400, 50] [450, 50] [500, 50] [500, 0] [500, 50] [500, 100] [500, 50] [500, 150] [500, 200] [100, 50] [100, 100] [100, 150] [100, 200] [300, 50] [250, 50] [300, 100] [300, 150] [300, 200] [50, 400] [100, 400] [150, 400] [200, 400] [50, 450] [50, 100] [100, 100] [50, 200] [50, 250] [250, 300] [300, 300] [200, 300] [350, 300] [350, 350] [400, 350] [400, 200] [400, 150] [200, 150] [250, 400] [250, 450] [250, 500] [350, 450] [400, 450] [450, 450] [500, 450]
++[250, 200] [300, 200] [350, 200] [400, 200] [200, 200] [150, 200] [250, 150] [150, 50] [200, 50] [250, 50] [300, 50] [150, 100] [100, 0] [50, 0] [150, 50] [200, 50] [100, 50] [150, 100] [250, 300] [300, 300] [250, 350] [250, 400] [150, 100] [100, 200] [50, 250] [50, 200] [50, 300] [50, 350] [0, 450] [50, 450] [100, 450] [150, 450] [150, 300] [150, 350] [400, 50] [450, 50] [500, 50] [450, 300] [450, 350] [450, 400] [400, 400] [350, 400] [350, 450]
++[200, 450] [200, 500] [550, 50] [0, 500] [50, 500] [100, 500] [150, 500] [0, 450] [0, 400] [300, 300] [300, 250] [300, 350] [300, 400] [50, 200] [100, 200] [150, 200] [200, 200] [50, 150] [200, 200] [250, 200] [300, 200] [200, 150] [200, 250] [200, 300] [200, 350] [0, 50] [50, 50] [100, 50] [150, 50] [0, 100] [0, 150] [450, 450] [450, 400] [450, 350] [450, 300] [450, 500] [100, 300] [100, 350] [100, 400] [250, 50] [300, 50] [350, 50] [400, 50] [450, 50] [500, 50] [400, 100] [400, 150] [400, 200]
++[100, 300] [150, 300] [200, 300] [100, 350] [100, 400] [50, 200] [50, 150] [50, 100] [50, 250] [50, 300] [350, 500] [400, 500] [450, 500] [300, 500] [250, 500] [50, 50] [100, 50] [150, 50] [200, 50] [450, 50] [500, 50] [400, 50] [350, 50] [300, 50] [300, 450] [400, 450] [300, 400] [300, 350] [300, 500] [450, 200] [400, 200] [350, 200] [300, 200] [450, 250] [450, 300] [450, 250] [500, 250] [350, 250] [450, 300] [200, 100] [200, 150] [200, 200] [150, 200] [200, 400] [400, 100] [400, 400]
++[350, 250] [400, 250] [300, 250] [350, 300] [350, 350] [350, 400] [50, 150] [100, 150] [150, 150] [50, 100] [50, 50] [350, 0] [400, 0] [300, 0] [250, 0] [200, 0] [250, 100] [300, 100] [350, 100] [200, 100] [150, 100] [250, 150] [250, 200] [200, 100] [150, 100] [50, 300] [50, 250] [50, 200] [50, 350] [50, 400] [50, 450] [150, 300] [150, 250] [100, 500] [150, 500] [200, 500] [250, 500] [50, 500] [200, 400] [150, 400] [250, 400] [450, 100] [450, 150] [450, 200] [450, 250] [450, 300] [450, 350] [450, 400] [450, 450] [300, 200]
++[50, 350] [50, 300] [50, 250] [250, 400] [200, 400] [150, 400] [250, 350] [450, 200] [500, 200] [400, 200] [350, 200] [300, 200] [450, 150] [450, 100] [400, 500] [350, 450] [350, 400] [350, 350] [300, 150] [250, 150] [200, 150] [300, 100] [300, 50] [300, 200] [150, 150] [100, 150] [150, 100] [150, 200] [150, 250] [100, 250] [50, 250] [150, 200] [450, 300] [450, 350] [450, 400] [0, 500] [50, 500] [50, 0] [50, 50] [350, 500]
++[150, 100] [100, 100] [50, 100] [150, 50] [50, 500] [100, 500] [150, 500] [150, 300] [200, 300] [250, 300] [300, 300] [150, 250] [150, 200] [150, 350] [450, 0] [400, 0] [0, 100] [50, 100] [100, 100] [0, 50] [0, 150] [0, 200] [0, 250] [450, 200] [450, 150] [450, 100] [450, 250] [450, 300] [450, 350] [300, 400] [350, 400] [300, 350] [300, 300] [300, 250] [450, 300] [500, 300] [450, 350] [450, 400] [450, 450] [250, 50] [300, 50] [350, 50] [300, 100] [300, 150] [50, 250] [50, 300] [50, 350] [50, 400] [350, 0]
++[150, 300] [100, 300] [150, 250] [150, 350] [150, 400] [500, 100] [450, 100] [400, 100] [150, 450] [200, 450] [100, 450] [50, 450] [150, 400] [150, 500] [500, 300] [450, 300] [400, 300] [350, 300] [500, 350] [500, 400] [500, 100] [500, 50] [500, 150] [350, 100] [300, 100] [150, 400] [250, 400] [50, 400] [150, 350] [150, 450] [150, 500] [0, 100] [0, 50] [0, 150] [0, 200] [100, 0] [100, 50] [100, 100] [100, 150] [250, 450] [300, 450] [350, 450] [400, 450] [200, 100] [200, 150] [200, 200] [300, 300] [350, 200] [350, 250] [200, 250]
++[200, 200] [150, 200] [250, 0] [300, 0] [350, 0] [400, 0] [250, 50] [250, 100] [250, 150] [350, 300] [350, 250] [50, 400] [100, 400] [50, 450] [50, 500] [450, 150] [400, 150] [450, 100] [450, 50] [450, 200] [100, 50] [50, 50] [100, 100] [500, 400] [450, 400] [500, 350] [500, 450] [0, 50] [50, 50] [100, 50] [150, 50] [0, 100] [0, 150] [0, 200] [250, 300] [200, 300] [150, 300] [100, 300] [250, 350] [250, 400] [250, 450] [350, 200] [350, 500] [250, 200] [350, 150] [450, 0]
++[250, 500] [200, 500] [0, 450] [50, 450] [100, 450] [0, 400] [0, 350] [0, 300] [0, 500] [300, 200] [350, 200] [250, 200] [200, 200] [450, 0] [450, 50] [450, 100] [450, 150] [0, 0] [200, 300] [200, 250] [200, 200] [200, 350] [200, 400] [250, 100] [200, 100] [150, 100] [200, 50] [100, 50] [50, 50] [200, 100] [200, 150] [50, 200] [100, 200] [100, 250] [100, 300] [100, 350] [350, 0] [350, 50] [350, 100] [300, 300] [300, 350] [350, 300] [400, 300] [450, 300] [500, 300] [300, 400] [350, 400] [350, 450] [400, 400] [100, 100] [0, 50]
++[500, 350] [450, 350] [400, 350] [500, 400] [500, 450] [500, 500] [500, 250] [450, 250] [400, 250] [500, 300] [50, 300] [100, 300] [50, 350] [50, 400] [500, 0] [450, 0] [400, 0] [350, 0] [500, 400] [400, 400] [350, 400] [300, 400] [450, 350] [450, 250] [350, 0] [400, 0] [450, 0] [250, 500] [200, 500] [200, 500] [150, 500] [100, 500] [200, 450] [200, 400] [200, 350] [0, 150] [50, 150] [100, 150] [150, 150] [250, 150] [300, 150] [350, 150] [400, 150] [200, 150] [200, 50] [150, 50] [100, 50] [50, 50] [200, 0] [200, 200] [200, 250] [300, 250] [350, 250]
++[200, 350] [150, 350] [100, 350] [50, 350] [200, 300] [200, 250] [200, 400] [200, 450] [200, 50] [150, 50] [100, 50] [50, 50] [200, 100] [200, 150] [200, 200] [200, 200] [250, 200] [300, 200] [350, 200] [100, 450] [100, 400] [200, 250] [150, 250] [200, 200] [200, 300] [300, 150] [500, 400] [450, 400] [400, 400] [500, 350] [500, 300] [500, 250] [500, 450] [500, 500] [150, 150] [200, 150] [100, 150] [50, 150] [150, 250] [250, 300] [300, 300] [350, 300] [300, 50] [350, 50] [400, 50] [450, 50] [450, 100] [450, 150] [300, 400] [300, 450] [300, 500] [0, 250]
++[100, 50] [100, 100] [100, 150] [350, 300] [400, 300] [450, 300] [500, 300] [300, 300] [250, 300] [200, 300] [350, 250] [300, 150] [350, 150] [250, 150] [200, 150] [150, 150] [150, 150] [200, 150] [250, 150] [300, 150] [100, 150] [50, 150] [50, 200] [50, 150] [50, 250] [50, 300] [50, 350] [250, 100] [350, 100] [250, 150] [300, 150] [350, 150] [250, 150] [150, 200] [50, 200] [100, 150] [500, 50] [450, 50] [450, 100] [450, 150] [450, 200] [450, 400] [400, 400] [350, 400] [300, 400] [300, 450] [300, 500] [50, 450] [100, 450] [150, 450] [150, 400]
++[500, 300] [450, 300] [500, 250] [500, 200] [400, 150] [350, 150] [300, 150] [400, 100] [400, 50] [400, 200] [350, 450] [400, 450] [300, 450] [250, 450] [350, 400] [350, 350] [350, 500] [450, 200] [400, 200] [450, 100] [100, 350] [150, 350] [50, 350] [0, 0] [0, 50] [0, 100] [150, 100] [200, 100] [150, 50] [150, 150] [350, 400] [450, 400] [50, 400] [50, 450] [50, 500] [150, 450] [150, 500] [50, 250] [50, 300] [100, 250] [150, 250] [250, 300] [300, 300] [350, 300] [300, 0] [450, 450]
++[200, 450] [250, 450] [200, 400] [200, 350] [200, 300] [200, 500] [350, 100] [300, 100] [350, 50] [150, 50] [100, 50] [50, 50] [50, 450] [350, 300] [400, 300] [450, 300] [350, 250] [500, 450] [500, 400] [500, 350] [500, 500] [100, 100] [200, 100] [100, 50] [100, 150] [100, 200] [100, 250] [150, 0] [0, 350] [50, 350] [100, 350] [200, 200] [250, 200] [300, 200] [350, 200] [400, 200] [450, 200] [350, 400] [400, 400] [400, 450] [200, 50] [500, 300]
++[300, 200] [350, 200] [400, 200] [450, 200] [300, 150] [300, 100] [300, 250] [300, 300] [300, 350] [400, 200] [450, 200] [500, 200] [350, 200] [300, 200] [400, 250] [400, 300] [150, 450] [100, 450] [50, 450] [150, 400] [150, 350] [150, 300] [200, 300] [150, 250] [150, 350] [150, 400] [150, 100] [200, 100] [100, 100] [50, 100] [150, 50] [0, 200] [0, 150] [0, 100] [300, 500] [350, 500] [400, 500] [250, 500] [150, 400] [200, 400] [150, 350] [150, 300] [150, 450] [150, 500] [400, 0] [400, 50] [400, 100] [0, 300] [50, 300] [450, 400] [450, 450] [450, 500]
++[350, 450] [400, 450] [450, 450] [300, 450] [350, 500] [50, 150] [50, 100] [50, 50] [0, 200] [0, 150] [300, 200] [350, 200] [400, 200] [450, 200] [250, 200] [200, 200] [150, 200] [150, 50] [100, 50] [150, 100] [150, 150] [150, 200] [350, 0] [400, 0] [50, 500] [100, 500] [150, 500] [50, 450] [50, 400] [150, 450] [150, 400] [150, 350] [150, 300] [150, 500] [300, 350] [350, 350] [400, 350] [450, 350] [500, 350] [250, 0] [250, 50] [250, 100] [300, 100] [350, 100] [400, 100] [450, 100] [0, 300]
++[500, 150] [450, 150] [400, 150] [350, 150] [500, 100] [500, 200] [500, 250] [300, 300] [350, 300] [400, 300] [250, 300] [200, 300] [150, 300] [300, 250] [300, 350] [300, 400] [300, 450] [100, 350] [100, 300] [100, 250] [100, 200] [100, 400] [300, 350] [200, 350] [50, 400] [500, 350] [450, 350] [400, 350] [500, 400] [450, 150] [500, 150] [500, 400] [450, 350] [300, 150] [250, 150] [200, 150] [200, 100] [200, 50] [250, 50] [300, 50] [350, 50] [400, 50] [50, 0] [50, 50] [50, 100] [200, 500] [400, 500]
++[0, 400] [0, 350] [0, 300] [0, 250] [0, 450] [450, 400] [400, 400] [350, 400] [300, 400] [450, 450] [450, 500] [200, 500] [250, 500] [400, 300] [400, 250] [400, 350] [400, 400] [250, 50] [300, 50] [350, 50] [400, 50] [250, 100] [250, 150] [250, 200] [500, 50] [500, 100] [300, 0] [300, 50] [300, 150] [500, 0] [500, 50] [500, 100] [500, 150] [300, 300] [250, 300] [200, 300] [150, 300] [150, 250] [150, 200] [150, 150] [150, 100] [150, 50] [50, 0] [50, 50] [50, 100] [50, 400] [100, 400] [150, 400]
++[50, 250] [100, 250] [150, 250] [50, 200] [50, 150] [50, 100] [500, 450] [500, 400] [500, 350] [500, 300] [500, 500] [150, 150] [200, 150] [250, 150] [300, 150] [150, 100] [50, 0] [100, 0] [150, 0] [350, 350] [400, 350] [450, 350] [350, 300] [350, 250] [500, 300] [400, 250] [400, 200] [450, 100] [450, 50] [450, 150] [350, 350] [300, 350] [250, 350] [200, 350] [350, 300] [350, 250] [350, 450] [300, 450] [250, 450] [200, 450] [150, 450] [100, 450] [50, 450] [250, 500] [0, 350] [0, 300] [300, 0] [350, 0] [400, 150] [50, 300]
++[150, 300] [450, 0] [500, 0] [400, 0] [350, 0] [450, 50] [250, 200] [300, 200] [300, 500] [350, 500] [400, 500] [450, 500] [300, 450] [300, 400] [0, 350] [50, 350] [100, 350] [0, 300] [0, 250] [0, 200] [150, 450] [150, 50] [200, 50] [250, 50] [100, 50] [50, 50] [150, 100] [150, 150] [150, 200] [50, 50] [250, 300] [300, 300] [350, 300] [400, 300] [400, 250] [400, 200] [450, 300] [400, 350] [350, 100] [350, 50] [0, 450] [50, 450] [100, 450] [150, 350]
++[500, 250] [450, 250] [400, 250] [350, 400] [350, 450] [300, 400] [350, 400] [400, 400] [450, 400] [250, 400] [200, 400] [300, 350] [300, 300] [150, 300] [200, 300] [250, 300] [400, 350] [50, 50] [100, 50] [150, 50] [50, 100] [50, 150] [50, 200] [450, 200] [450, 150] [450, 100] [450, 50] [0, 100] [50, 100] [250, 0] [250, 50] [250, 100] [250, 150] [250, 200] [350, 0] [350, 50] [350, 100] [350, 150] [50, 300] [50, 350] [150, 150] [50, 400] [50, 450]
++[200, 300] [250, 300] [150, 300] [100, 300] [200, 250] [200, 200] [200, 150] [200, 350] [150, 450] [200, 450] [250, 450] [100, 100] [150, 100] [200, 100] [250, 100] [50, 100] [100, 50] [100, 150] [100, 200] [300, 300] [250, 300] [200, 300] [300, 350] [300, 400] [300, 150] [200, 150] [300, 100] [300, 200] [500, 50] [500, 100] [500, 150] [500, 150] [450, 150] [400, 150] [500, 100] [500, 50] [0, 100] [0, 50] [50, 400] [50, 450] [50, 500] [400, 400] [400, 350] [400, 300] [400, 250] [450, 400] [500, 400] [300, 450]
++[100, 250] [50, 250] [300, 150] [350, 150] [300, 100] [300, 50] [300, 200] [300, 250] [300, 300] [450, 0] [500, 0] [450, 50] [200, 150] [250, 150] [300, 150] [350, 150] [150, 150] [100, 150] [50, 150] [200, 100] [200, 50] [400, 350] [350, 350] [300, 350] [400, 400] [400, 450] [50, 200] [300, 300] [400, 300] [450, 300] [250, 300] [100, 50] [50, 50] [100, 100] [100, 150] [450, 150] [450, 200] [500, 200] [150, 350] [150, 400] [150, 450] [150, 500] [50, 500] [50, 450] [50, 400] [50, 350] [200, 450] [250, 450]
++[250, 100] [300, 100] [250, 50] [250, 150] [250, 500] [300, 500] [350, 500] [400, 500] [200, 500] [250, 450] [250, 400] [250, 350] [350, 100] [400, 100] [300, 100] [250, 100] [200, 100] [350, 50] [50, 350] [100, 350] [50, 300] [500, 300] [450, 300] [400, 300] [350, 300] [500, 250] [500, 200] [400, 400] [450, 400] [400, 350] [400, 300] [400, 250] [100, 200] [150, 200] [50, 200] [0, 450] [50, 450] [100, 450] [0, 400] [0, 350] [200, 200] [200, 250] [100, 0] [100, 50] [100, 100] [250, 200]
++[500, 400] [450, 400] [400, 400] [350, 400] [500, 450] [200, 100] [250, 100] [300, 100] [150, 100] [100, 100] [50, 100] [400, 150] [450, 150] [500, 150] [400, 200] [400, 250] [100, 100] [150, 100] [200, 100] [50, 100] [100, 50] [300, 150] [350, 150] [200, 150] [300, 100] [500, 200] [400, 200] [300, 200] [450, 150] [100, 350] [150, 350] [200, 350] [100, 300] [100, 200] [100, 250] [100, 300] [100, 350] [200, 300] [250, 300] [300, 300] [350, 300] [400, 300] [450, 300] [50, 450] [100, 450] [150, 450] [200, 450] [200, 500] [400, 0] [450, 0]
++[250, 500] [300, 500] [350, 500] [400, 500] [200, 500] [300, 450] [400, 450] [300, 400] [300, 350] [300, 500] [450, 200] [500, 200] [400, 200] [450, 150] [450, 100] [450, 250] [450, 300] [450, 350] [300, 50] [350, 50] [250, 50] [200, 50] [150, 50] [300, 100] [450, 250] [450, 200] [450, 150] [450, 100] [0, 50] [0, 100] [0, 150] [0, 200] [50, 400] [50, 350] [50, 300] [150, 250] [150, 200] [150, 150] [150, 100] [150, 300] [200, 200] [250, 200] [300, 200] [100, 400] [150, 400]
++[300, 400] [350, 400] [400, 400] [450, 400] [250, 400] [200, 400] [150, 400] [300, 350] [300, 300] [300, 450] [300, 500] [0, 500] [350, 0] [100, 50] [50, 500] [150, 350] [300, 350] [100, 350] [50, 350] [150, 400] [100, 100] [150, 100] [200, 100] [100, 50] [100, 150] [100, 200] [200, 50] [250, 50] [200, 100] [200, 150] [200, 200] [500, 100] [450, 100] [400, 100] [350, 100] [350, 150] [350, 200] [400, 200] [450, 200] [400, 250] [400, 300] [0, 100] [50, 100]
++[250, 300] [200, 300] [150, 300] [250, 350] [100, 200] [50, 200] [100, 150] [100, 100] [100, 50] [100, 250] [100, 300] [400, 50] [350, 50] [300, 50] [250, 50] [300, 100] [350, 300] [400, 300] [100, 400] [50, 400] [100, 350] [400, 500] [450, 100] [400, 100] [0, 50] [50, 50] [350, 400] [350, 350] [350, 450] [350, 500] [450, 300] [450, 350] [450, 400] [300, 150] [300, 200] [250, 200] [200, 200] [500, 100] [100, 450] [150, 450] [200, 450] [400, 150] [400, 200]
++[200, 350] [250, 350] [300, 350] [350, 350] [150, 350] [200, 400] [200, 450] [200, 500] [300, 250] [350, 250] [400, 250] [300, 300] [300, 350] [550, 50] [500, 50] [450, 50] [400, 50] [100, 500] [150, 500] [50, 500] [100, 450] [400, 100] [500, 100] [350, 100] [300, 100] [300, 100] [250, 100] [200, 100] [300, 50] [150, 250] [100, 250] [50, 250] [100, 50] [100, 100] [50, 100] [0, 100] [100, 350] [50, 350] [300, 400] [300, 450] [350, 450] [400, 450] [450, 450] [450, 400] [450, 350] [500, 200] [500, 250]
++[50, 100] [50, 50] [50, 150] [50, 200] [50, 250] [300, 350] [350, 350] [400, 350] [300, 400] [300, 0] [300, 50] [300, 100] [50, 200] [100, 200] [50, 150] [50, 100] [50, 50] [50, 250] [50, 300] [250, 0] [300, 0] [250, 100] [250, 150] [150, 500] [150, 450] [150, 400] [150, 350] [500, 0] [450, 0] [400, 0] [500, 50] [500, 100] [50, 150] [50, 100] [50, 50] [50, 200] [250, 200] [300, 200] [350, 200] [400, 200] [450, 200] [400, 150] [400, 100] [200, 100] [150, 100] [150, 50] [300, 450] [350, 450] [400, 450] [450, 450] [500, 450] [50, 350] [50, 400] [50, 450] [50, 500]
++[100, 0] [150, 0] [50, 0] [150, 500] [200, 500] [250, 500] [300, 500] [150, 450] [150, 400] [150, 350] [200, 350] [250, 350] [300, 350] [150, 300] [250, 400] [200, 350] [100, 0] [100, 50] [100, 100] [100, 300] [150, 300] [50, 300] [100, 250] [100, 200] [250, 100] [300, 100] [250, 50] [350, 300] [300, 300] [350, 250] [350, 200] [350, 150] [200, 100] [200, 150] [200, 200] [250, 200] [50, 350] [50, 400] [50, 450] [450, 50] [450, 100] [450, 150] [450, 200] [450, 250] [450, 300] [450, 350] [450, 400] [400, 250] [350, 100]
++[50, 300] [100, 300] [150, 300] [200, 300] [50, 350] [50, 400] [50, 450] [450, 150] [400, 150] [350, 150] [300, 150] [450, 100] [450, 50] [200, 0] [250, 0] [300, 0] [350, 0] [150, 0] [100, 0] [500, 400] [450, 400] [400, 400] [500, 200] [500, 150] [500, 250] [550, 150] [550, 100] [550, 50] [300, 450] [300, 400] [300, 350] [100, 250] [100, 300] [150, 350] [150, 400] [150, 450] [150, 500] [200, 50] [200, 100] [200, 150] [150, 150] [100, 150] [50, 150] [50, 100] [300, 200] [300, 250] [350, 250]
++[350, 350] [350, 400] [350, 300] [50, 400] [100, 400] [50, 450] [300, 300] [350, 300] [450, 300] [300, 250] [300, 400] [300, 450] [400, 0] [450, 0] [350, 0] [300, 0] [250, 0] [200, 0] [150, 0] [100, 0] [300, 400] [250, 400] [200, 400] [150, 400] [300, 300] [300, 50] [400, 50] [0, 250] [50, 250] [100, 250] [150, 250] [0, 200] [100, 50] [100, 100] [100, 150] [200, 150] [250, 150] [300, 150] [350, 150] [200, 100] [400, 150] [450, 150] [500, 150] [100, 300] [400, 400] [400, 450]
++[50, 0] [100, 0] [400, 250] [450, 250] [350, 250] [400, 200] [400, 150] [400, 300] [400, 350] [150, 50] [150, 100] [150, 150] [150, 200] [100, 200] [150, 200] [50, 200] [400, 0] [450, 0] [500, 0] [350, 0] [300, 0] [50, 150] [50, 200] [100, 350] [150, 350] [200, 350] [50, 350] [100, 300] [100, 250] [100, 200] [100, 400] [250, 500] [300, 500] [350, 500] [400, 500] [200, 500] [200, 100] [250, 100] [300, 100] [350, 100] [400, 100] [450, 100] [250, 150] [250, 200] [250, 300] [250, 350] [300, 450] [150, 0]
++[100, 250] [150, 250] [200, 250] [100, 200] [100, 150] [100, 100] [100, 300] [100, 350] [150, 0] [200, 0] [100, 0] [400, 0] [350, 0] [400, 50] [400, 100] [300, 150] [250, 150] [200, 150] [300, 100] [400, 400] [350, 400] [300, 400] [400, 450] [450, 200] [400, 200] [450, 250] [100, 150] [50, 150] [100, 200] [500, 450] [450, 450] [200, 300] [200, 350] [200, 400] [200, 450] [150, 450] [100, 450] [50, 450] [350, 200] [350, 250] [350, 300] [300, 200]
++[350, 100] [350, 150] [350, 150] [400, 150] [450, 150] [0, 100] [0, 50] [0, 150] [0, 200] [150, 100] [100, 100] [50, 100] [150, 50] [150, 150] [150, 200] [150, 250] [450, 450] [450, 400] [450, 500] [50, 400] [100, 400] [150, 400] [50, 450] [400, 350] [450, 350] [350, 350] [300, 350] [250, 350] [400, 450] [250, 50] [300, 50] [350, 50] [400, 50] [450, 50] [500, 50] [250, 450] [300, 450] [350, 450] [200, 150] [250, 150] [350, 200] [350, 250] [400, 250] [450, 250] [150, 300] [100, 300] [50, 300]
++[250, 200] [250, 150] [250, 100] [0, 250] [50, 250] [100, 250] [150, 250] [0, 200] [0, 300] [0, 350] [0, 150] [50, 150] [0, 100] [0, 50] [250, 500] [300, 500] [200, 500] [150, 500] [100, 500] [250, 450] [250, 400] [250, 350] [350, 150] [400, 150] [450, 150] [500, 150] [450, 100] [350, 100] [300, 100] [450, 150] [450, 300] [500, 300] [400, 300] [350, 300] [450, 350] [50, 50] [100, 50] [150, 50] [100, 150] [150, 150] [50, 350] [100, 350] [100, 400] [150, 400] [350, 400] [400, 400] [450, 400] [450, 450]
++[50, 150] [100, 150] [50, 100] [200, 0] [250, 0] [100, 300] [100, 250] [100, 200] [100, 150] [100, 350] [100, 400] [100, 450] [450, 400] [400, 400] [350, 400] [300, 400] [450, 350] [450, 450] [150, 400] [200, 400] [250, 400] [300, 400] [100, 400] [50, 400] [450, 150] [400, 150] [350, 150] [300, 150] [450, 100] [450, 50] [150, 50] [200, 50] [300, 350] [200, 350] [300, 300] [300, 400] [300, 450] [250, 150] [200, 150] [200, 200] [200, 250] [50, 250] [0, 250] [350, 0] [400, 200] [400, 250]
++[100, 300] [150, 300] [200, 300] [250, 300] [50, 300] [150, 50] [150, 100] [150, 150] [150, 200] [250, 450] [300, 450] [250, 500] [0, 500] [50, 500] [450, 350] [500, 350] [450, 300] [450, 250] [450, 400] [450, 450] [150, 550] [200, 550] [200, 400] [150, 400] [100, 400] [200, 350] [200, 300] [200, 250] [200, 450] [200, 250] [200, 200] [200, 300] [200, 350] [200, 400] [100, 50] [50, 50] [50, 100] [50, 150] [50, 200] [400, 250] [400, 200] [400, 150] [400, 100] [400, 50] [350, 50] [300, 50] [300, 100] [300, 150] [400, 350] [350, 350]
++[300, 200] [350, 200] [400, 200] [450, 200] [300, 150] [300, 100] [400, 0] [450, 0] [500, 0] [400, 50] [100, 400] [150, 400] [200, 400] [250, 400] [100, 350] [100, 450] [300, 500] [350, 500] [400, 500] [300, 450] [300, 400] [300, 350] [500, 250] [500, 200] [500, 300] [500, 350] [250, 200] [300, 200] [350, 200] [400, 200] [250, 100] [250, 50] [450, 0] [450, 100] [300, 100] [300, 150] [350, 350] [400, 350] [400, 400] [200, 50] [150, 50] [100, 50] [50, 50] [50, 100] [50, 150] [100, 150] [150, 150] [150, 250] [100, 250] [50, 250] [400, 100]
++[300, 400] [250, 400] [200, 400] [300, 450] [300, 500] [300, 350] [300, 400] [450, 350] [500, 350] [400, 350] [450, 300] [450, 250] [0, 150] [50, 150] [100, 150] [0, 200] [0, 250] [0, 300] [250, 0] [300, 0] [350, 0] [200, 0] [250, 500] [250, 400] [250, 400] [250, 300] [250, 500] [100, 0] [150, 0] [350, 50] [350, 100] [400, 100] [450, 100] [450, 50] [350, 150] [350, 200] [300, 200] [250, 200] [200, 200] [200, 50] [200, 100] [400, 400] [400, 450] [450, 450] [50, 300] [100, 300] [100, 350] [100, 400] [100, 450] [50, 450] [300, 300]
++[400, 400] [450, 400] [400, 450] [250, 100] [200, 100] [50, 350] [100, 350] [150, 100] [100, 100] [150, 50] [150, 150] [450, 250] [500, 250] [400, 250] [450, 200] [450, 150] [50, 50] [50, 100] [100, 450] [150, 450] [200, 450] [50, 450] [100, 400] [100, 350] [100, 500] [50, 150] [50, 200] [50, 250] [200, 350] [200, 400] [150, 200] [200, 200] [350, 50] [350, 100] [400, 100] [450, 100] [300, 200] [300, 250] [300, 300] [300, 350] [350, 350] [400, 350]
++[50, 400] [100, 400] [150, 400] [50, 350] [50, 300] [50, 250] [50, 450] [50, 500] [50, 400] [100, 400] [150, 400] [50, 350] [50, 300] [400, 100] [450, 100] [500, 100] [500, 100] [450, 100] [400, 100] [350, 100] [500, 150] [500, 200] [500, 250] [400, 300] [400, 250] [400, 200] [400, 150] [400, 350] [400, 400] [50, 50] [100, 50] [150, 50] [50, 100] [50, 0] [50, 50] [50, 100] [250, 500] [300, 500] [150, 100] [150, 150] [200, 150] [200, 200] [250, 200] [300, 200] [150, 350] [200, 350] [250, 0] [250, 50] [250, 300] [200, 300] [300, 300] [300, 350] [300, 400]
++[100, 250] [50, 250] [100, 200] [100, 150] [100, 100] [100, 300] [100, 350] [450, 100] [400, 100] [450, 150] [450, 150] [450, 200] [0, 250] [50, 250] [100, 250] [0, 200] [0, 150] [400, 300] [350, 300] [500, 100] [450, 100] [400, 100] [350, 100] [350, 250] [350, 300] [400, 300] [450, 300] [500, 300] [250, 300] [200, 300] [350, 350] [350, 400] [100, 50] [50, 50] [150, 50] [200, 50] [250, 50] [250, 100] [250, 150] [200, 150] [50, 450] [100, 450] [150, 450] [200, 450] [250, 450] [300, 450] [350, 450] [400, 450] [450, 450]
++[100, 400] [50, 400] [100, 350] [100, 300] [100, 450] [200, 150] [150, 150] [100, 150] [200, 200] [200, 250] [0, 150] [50, 150] [100, 150] [0, 200] [400, 300] [450, 300] [500, 300] [400, 250] [250, 500] [300, 500] [350, 500] [200, 500] [250, 450] [250, 400] [550, 300] [500, 300] [450, 300] [400, 300] [550, 250] [550, 200] [550, 350] [550, 400] [250, 500] [200, 500] [250, 350] [300, 350] [400, 350] [400, 400] [450, 400] [450, 450] [250, 150] [300, 150] [350, 150] [350, 100] [350, 50] [300, 50] [250, 50] [200, 50] [150, 50] [100, 50] [50, 50] [400, 100] [450, 100]
++[400, 500] [450, 500] [350, 500] [400, 450] [400, 400] [400, 350] [100, 150] [150, 150] [200, 150] [100, 100] [100, 200] [100, 250] [100, 300] [500, 100] [500, 50] [450, 100] [500, 100] [400, 100] [450, 150] [450, 200] [500, 0] [450, 0] [500, 50] [500, 100] [200, 400] [250, 400] [300, 400] [150, 400] [200, 350] [200, 300] [200, 250] [200, 450] [400, 400] [450, 400] [350, 400] [300, 400] [250, 400] [400, 0] [450, 0] [500, 0] [300, 100] [300, 150] [300, 200] [300, 250] [350, 250] [200, 0] [50, 400] [50, 450] [50, 500] [100, 500]
++[150, 350] [150, 400] [50, 300] [50, 250] [50, 350] [200, 50] [150, 50] [100, 50] [50, 50] [350, 200] [400, 200] [450, 200] [500, 200] [300, 200] [350, 250] [350, 300] [350, 350] [500, 400] [500, 350] [300, 100] [350, 100] [400, 100] [250, 100] [200, 100] [250, 0] [300, 0] [350, 0] [200, 0] [300, 200] [350, 200] [400, 200] [250, 200] [200, 200] [150, 200] [250, 350] [250, 400] [250, 450] [300, 450] [350, 450] [400, 450] [400, 500] [0, 450] [0, 500] [50, 500] [0, 150] [50, 150]
++[500, 0] [450, 0] [500, 50] [50, 100] [100, 100] [50, 50] [400, 400] [450, 400] [500, 400] [350, 300] [350, 250] [350, 200] [350, 350] [350, 400] [250, 500] [250, 450] [350, 50] [400, 50] [300, 50] [250, 50] [150, 250] [100, 250] [50, 250] [150, 200] [150, 150] [150, 300] [150, 350] [150, 400] [150, 200] [200, 200] [50, 200] [150, 250] [150, 300] [450, 150] [450, 200] [450, 250] [450, 300] [450, 350] [200, 300] [250, 300] [250, 350] [250, 400] [50, 350] [50, 400] [50, 450] [300, 100] [400, 0] [150, 100]
++[50, 500] [100, 500] [150, 500] [200, 500] [50, 450] [150, 100] [200, 100] [150, 150] [450, 400] [500, 400] [400, 400] [350, 400] [450, 350] [450, 450] [450, 300] [450, 350] [300, 50] [150, 50] [150, 100] [150, 250] [200, 250] [100, 250] [50, 250] [150, 200] [200, 450] [250, 450] [200, 400] [200, 350] [50, 0] [50, 50] [50, 100] [50, 150] [0, 350] [50, 350] [100, 350] [300, 150] [350, 150] [350, 200] [350, 250] [400, 200] [450, 200] [450, 150] [450, 100] [450, 50]
++[200, 200] [150, 200] [100, 200] [200, 150] [200, 100] [200, 250] [100, 450] [100, 400] [100, 500] [300, 50] [350, 50] [400, 50] [250, 50] [200, 50] [300, 100] [300, 150] [0, 50] [50, 50] [100, 200] [150, 200] [200, 200] [50, 200] [100, 250] [100, 300] [100, 350] [500, 300] [450, 300] [400, 300] [500, 250] [500, 200] [500, 350] [500, 400] [50, 300] [100, 300] [50, 200] [50, 400] [200, 300] [200, 250] [200, 200] [300, 250] [300, 300] [300, 350] [300, 400] [350, 400] [400, 400] [400, 450] [400, 500] [200, 400] [200, 450] [400, 100] [400, 150] [50, 150]
++[400, 400] [350, 400] [400, 450] [300, 0] [300, 50] [250, 50] [0, 50] [0, 100] [0, 150] [0, 200] [350, 300] [300, 300] [250, 300] [350, 250] [350, 200] [350, 350] [350, 400] [100, 500] [150, 500] [50, 500] [100, 450] [0, 250] [0, 200] [0, 300] [450, 100] [400, 100] [350, 100] [300, 100] [450, 150] [450, 200] [450, 250] [100, 0] [100, 50] [100, 100] [100, 150] [100, 200] [100, 250] [100, 300] [100, 350] [150, 150] [200, 150] [200, 200] [200, 400] [200, 450] [200, 500]
++[500, 200] [50, 250] [100, 250] [50, 200] [50, 150] [500, 500] [450, 500] [150, 400] [200, 400] [250, 400] [150, 350] [150, 450] [400, 300] [450, 300] [500, 300] [350, 300] [300, 300] [0, 0] [50, 0] [100, 0] [0, 50] [0, 100] [0, 150] [250, 50] [200, 50] [250, 100] [250, 150] [250, 200] [50, 150] [50, 200] [50, 250] [50, 300] [50, 350] [50, 400] [300, 400] [350, 400] [400, 400] [450, 400] [350, 450] [350, 500] [150, 150] [200, 150] [450, 200] [400, 200] [350, 200] [350, 150] [350, 100] [350, 50] [400, 50] [450, 50] [450, 100]
++[100, 450] [150, 450] [200, 450] [50, 450] [450, 350] [500, 350] [400, 350] [0, 0] [50, 0] [100, 0] [150, 0] [0, 50] [450, 0] [400, 0] [350, 0] [450, 50] [450, 100] [450, 150] [100, 400] [100, 200] [150, 200] [200, 200] [250, 200] [50, 200] [50, 450] [100, 450] [150, 450] [200, 450] [50, 350] [50, 500] [100, 200] [150, 200] [200, 200] [250, 200] [100, 150] [100, 100] [100, 250] [100, 300] [100, 350] [200, 100] [250, 100] [300, 100] [350, 100] [350, 150] [350, 200] [200, 300] [200, 350] [250, 350] [300, 350] [300, 400] [300, 450] [350, 450] [400, 450] [450, 200] [450, 250]
++[150, 300] [200, 300] [100, 300] [50, 300] [150, 250] [150, 200] [150, 150] [400, 350] [450, 350] [500, 350] [350, 350] [300, 350] [400, 300] [400, 250] [400, 200] [500, 350] [450, 350] [500, 300] [500, 400] [500, 450] [150, 200] [100, 200] [50, 200] [150, 250] [350, 50] [400, 50] [450, 50] [300, 50] [250, 50] [200, 50] [350, 100] [350, 150] [100, 300] [150, 300] [200, 300] [250, 300] [50, 300] [200, 300] [150, 300] [100, 300] [200, 350] [300, 300] [250, 300] [350, 350] [100, 350] [100, 400] [100, 450] [150, 450] [200, 450] [250, 450] [300, 450] [350, 450] [400, 450] [400, 150] [250, 100] [250, 150] [250, 200] [0, 50] [50, 50] [100, 50]
++[300, 400] [350, 400] [250, 400] [300, 350] [300, 300] [300, 250] [300, 450] [450, 250] [400, 250] [350, 250] [300, 250] [450, 200] [450, 150] [450, 100] [450, 300] [450, 350] [450, 400] [200, 150] [250, 150] [200, 100] [200, 50] [200, 200] [0, 450] [50, 450] [0, 400] [0, 350] [0, 300] [0, 500] [50, 100] [100, 100] [150, 250] [100, 250] [150, 300] [50, 0] [100, 0] [200, 250] [150, 250] [100, 250] [200, 200] [200, 150] [200, 100] [200, 350] [200, 400] [350, 150] [350, 100] [350, 50] [400, 50] [450, 50] [50, 150] [150, 350]
++[300, 500] [350, 500] [400, 500] [450, 500] [300, 350] [350, 350] [400, 350] [300, 400] [300, 450] [200, 100] [250, 100] [300, 100] [350, 100] [200, 150] [200, 200] [250, 450] [300, 450] [200, 450] [150, 450] [250, 350] [200, 200] [200, 150] [200, 250] [100, 200] [150, 200] [200, 200] [100, 150] [100, 100] [100, 50] [100, 200] [100, 250] [100, 300] [200, 50] [300, 50] [200, 100] [50, 400] [50, 450] [50, 500] [300, 150] [300, 200] [300, 250] [350, 250] [400, 250] [450, 250] [450, 200] [450, 150] [450, 100] [450, 50]
++[350, 300] [300, 300] [350, 250] [350, 350] [350, 400] [350, 450] [150, 200] [100, 200] [50, 200] [150, 150] [150, 100] [150, 0] [200, 0] [150, 50] [150, 100] [150, 150] [50, 400] [50, 350] [50, 300] [400, 350] [350, 350] [250, 350] [500, 0] [150, 450] [200, 450] [150, 400] [150, 350] [150, 300] [450, 450] [500, 450] [450, 400] [450, 350] [450, 300] [200, 100] [250, 100] [300, 100] [350, 100] [400, 100] [400, 50] [250, 150] [350, 150] [500, 200] [450, 200] [50, 0] [50, 50] [250, 300]
++[100, 500] [150, 500] [200, 500] [250, 500] [100, 450] [100, 400] [100, 350] [350, 50] [300, 50] [250, 50] [350, 100] [350, 150] [350, 200] [50, 100] [50, 50] [50, 150] [50, 200] [50, 250] [350, 500] [350, 450] [350, 400] [350, 350] [450, 250] [500, 250] [450, 300] [450, 350] [450, 400] [50, 250] [100, 250] [50, 200] [100, 300] [150, 250] [100, 350] [100, 400] [150, 400] [200, 400] [250, 400] [150, 200] [150, 150] [150, 100] [150, 50] [250, 150] [250, 200] [250, 300] [500, 150] [450, 150] [450, 100] [450, 50]
++[450, 100] [500, 100] [400, 100] [350, 100] [300, 100] [450, 350] [450, 300] [450, 250] [450, 400] [150, 500] [100, 500] [50, 500] [150, 450] [150, 400] [400, 500] [450, 500] [500, 500] [450, 450] [450, 400] [450, 500] [250, 300] [250, 350] [50, 250] [100, 250] [150, 250] [50, 200] [50, 150] [50, 100] [50, 300] [50, 350] [50, 100] [100, 100] [150, 100] [200, 100] [200, 450] [250, 450] [300, 450] [250, 200] [300, 200] [350, 200] [350, 250] [350, 300] [350, 350] [100, 0] [100, 50]
++[100, 350] [300, 0] [50, 350] [100, 400] [450, 400] [400, 400] [350, 400] [300, 400] [450, 350] [450, 300] [450, 450] [0, 400] [0, 350] [0, 300] [0, 450] [200, 300] [250, 300] [300, 300] [150, 300] [100, 300] [200, 250] [200, 350] [200, 400] [200, 450] [0, 350] [50, 350] [0, 300] [300, 50] [250, 50] [300, 50] [200, 50] [150, 50] [250, 100] [350, 0] [250, 150] [300, 150] [350, 150] [400, 150] [450, 150] [450, 100] [450, 50] [100, 50] [100, 100] [100, 150] [100, 200] [50, 200]
++[400, 200] [150, 150] [150, 100] [150, 50] [150, 0] [200, 0] [250, 0] [300, 0] [100, 0] [50, 0] [150, 50] [150, 100] [200, 150] [500, 200] [450, 200] [500, 250] [500, 300] [200, 400] [250, 400] [300, 400] [350, 400] [150, 400] [100, 400] [300, 0] [350, 0] [400, 0] [250, 0] [200, 0] [300, 50] [300, 100] [300, 150] [450, 300] [400, 300] [450, 350] [450, 400] [50, 50] [50, 100] [50, 150] [50, 200] [50, 250] [50, 300] [50, 350] [50, 400] [50, 500] [100, 500] [150, 500] [200, 500] [250, 500] [400, 100] [450, 100] [500, 100] [150, 250] [150, 300] [200, 300] [250, 300] [300, 300] [300, 250]
++[150, 150] [400, 100] [150, 100] [150, 200] [150, 250] [50, 450] [400, 50] [450, 50] [0, 200] [0, 250] [0, 300] [0, 350] [150, 350] [100, 350] [50, 350] [150, 300] [150, 250] [150, 200] [150, 300] [200, 300] [250, 300] [300, 300] [150, 250] [150, 0] [200, 0] [300, 100] [350, 100] [250, 100] [200, 100] [300, 50] [150, 450] [200, 450] [250, 450] [300, 450] [350, 450] [400, 450] [450, 450] [450, 400] [450, 350] [450, 300] [450, 250] [450, 200] [500, 250] [250, 200] [300, 200] [350, 200] [350, 250] [350, 300] [0, 50] [50, 50] [50, 100]
++[150, 450] [50, 100] [150, 350] [200, 350] [250, 350] [150, 400] [350, 0] [400, 0] [400, 0] [450, 0] [500, 0] [400, 50] [50, 50] [350, 400] [400, 400] [450, 400] [500, 400] [300, 400] [250, 400] [350, 350] [350, 450] [50, 400] [50, 450] [50, 500] [100, 0] [150, 0] [50, 0] [100, 100] [100, 150] [200, 0] [200, 50] [200, 100] [200, 150] [200, 200] [250, 200] [300, 200] [350, 200] [350, 150] [400, 150] [450, 150] [450, 200] [450, 250] [450, 300] [0, 250] [50, 250] [100, 250]
++[100, 500] [150, 500] [100, 450] [150, 100] [100, 100] [50, 100] [150, 50] [150, 150] [500, 500] [450, 500] [400, 500] [500, 200] [300, 0] [350, 0] [250, 0] [200, 0] [150, 0] [300, 50] [300, 300] [350, 300] [400, 300] [300, 250] [300, 200] [300, 150] [300, 350] [300, 400] [350, 200] [300, 200] [400, 0] [450, 0] [500, 0] [350, 0] [300, 0] [400, 50] [500, 400] [450, 400] [400, 400] [450, 200] [450, 150] [0, 250] [50, 250] [150, 200] [150, 250] [150, 300] [150, 350] [100, 350] [50, 350] [200, 150] [200, 300]
++[500, 450] [450, 450] [300, 350] [250, 350] [300, 300] [300, 250] [300, 200] [300, 400] [100, 400] [100, 350] [150, 250] [200, 250] [100, 250] [50, 250] [150, 200] [150, 150] [150, 100] [0, 450] [50, 450] [100, 450] [150, 450] [350, 400] [400, 400] [450, 400] [350, 300] [0, 400] [0, 450] [100, 100] [50, 100] [100, 50] [450, 0] [450, 50] [450, 100] [450, 150] [450, 200] [450, 250] [450, 300] [400, 50] [350, 50] [300, 50] [250, 50] [350, 100]
++[200, 350] [0, 350] [200, 300] [100, 350] [150, 350] [200, 350] [50, 350] [100, 300] [400, 350] [400, 300] [400, 250] [300, 100] [350, 100] [400, 100] [250, 100] [300, 150] [300, 200] [300, 250] [50, 500] [100, 500] [150, 500] [200, 500] [100, 500] [150, 500] [200, 500] [250, 500] [50, 500] [0, 400] [0, 450] [0, 500] [450, 150] [450, 100] [450, 50] [350, 450] [400, 450] [450, 450] [500, 450] [350, 350] [300, 350] [0, 50] [50, 50] [100, 50] [150, 50] [150, 100] [150, 150] [150, 200] [100, 200] [50, 200] [50, 150]
++[200, 450] [300, 150] [200, 400] [200, 500] [400, 200] [450, 200] [350, 200] [300, 200] [400, 150] [200, 150] [250, 150] [150, 150] [100, 150] [50, 150] [200, 200] [200, 250] [400, 0] [450, 0] [500, 0] [350, 0] [50, 450] [50, 500] [0, 500] [50, 500] [100, 500] [0, 50] [50, 50] [100, 50] [200, 100] [200, 50] [200, 150] [0, 250] [50, 250] [100, 250] [100, 300] [100, 350] [50, 350] [450, 500] [450, 450] [450, 400] [450, 350] [450, 300] [400, 300] [350, 300] [300, 300] [300, 350] [300, 400] [300, 450] [350, 450]
++[450, 100] [400, 100] [350, 100] [450, 50] [250, 350] [300, 350] [350, 350] [400, 350] [200, 350] [150, 350] [100, 350] [150, 500] [100, 500] [50, 500] [400, 200] [450, 200] [350, 200] [400, 250] [400, 300] [400, 350] [150, 150] [200, 150] [0, 250] [50, 250] [100, 250] [150, 250] [0, 200] [0, 150] [0, 300] [50, 0] [500, 350] [450, 350] [500, 300] [500, 400] [250, 400] [250, 450] [300, 450] [350, 450] [400, 450] [250, 200] [250, 150] [250, 100] [250, 50] [200, 50] [150, 50]
++[500, 400] [450, 400] [400, 400] [350, 400] [500, 350] [350, 50] [350, 100] [350, 150] [350, 450] [300, 450] [250, 450] [200, 450] [350, 400] [350, 350] [350, 300] [350, 0] [400, 100] [350, 100] [50, 300] [200, 100] [250, 100] [300, 100] [200, 50] [50, 300] [100, 300] [50, 350] [50, 400] [50, 450] [150, 50] [100, 50] [50, 50] [100, 100] [100, 150] [100, 200] [150, 200] [200, 200] [250, 200] [200, 250] [200, 300] [250, 300] [200, 350] [450, 100] [450, 150] [450, 200] [450, 250]
++[500, 350] [50, 150] [50, 100] [50, 50] [50, 200] [50, 250] [50, 300] [250, 150] [300, 150] [350, 150] [200, 150] [300, 0] [350, 0] [50, 200] [100, 200] [150, 200] [200, 200] [50, 150] [50, 100] [200, 500] [250, 500] [300, 500] [350, 500] [200, 450] [0, 50] [50, 50] [500, 150] [500, 100] [500, 200] [500, 250] [300, 50] [250, 50] [200, 50] [150, 50] [50, 350] [100, 350] [150, 350] [200, 350] [200, 300] [300, 250] [350, 250] [350, 300] [350, 350] [50, 450] [100, 450] [350, 450] [400, 450] [450, 450]
++[350, 100] [100, 150] [350, 50] [350, 150] [300, 400] [350, 400] [400, 400] [250, 400] [300, 350] [300, 300] [300, 250] [250, 400] [300, 400] [350, 400] [400, 400] [200, 400] [350, 150] [300, 150] [250, 150] [350, 100] [350, 50] [50, 400] [50, 450] [50, 500] [250, 100] [350, 100] [400, 100] [200, 100] [150, 100] [100, 100] [250, 50] [250, 150] [500, 200] [500, 150] [500, 100] [500, 50] [500, 250] [500, 300] [500, 350] [0, 150] [50, 150] [0, 100] [0, 50] [0, 200] [100, 250] [100, 300] [100, 350] [100, 400] [350, 250] [400, 250] [400, 300] [250, 450] [200, 300]
++[500, 500] [450, 500] [400, 500] [500, 450] [500, 400] [100, 200] [150, 200] [200, 200] [100, 150] [100, 100] [200, 250] [300, 250] [350, 250] [450, 400] [450, 350] [350, 250] [400, 250] [450, 250] [500, 250] [350, 200] [350, 150] [350, 300] [350, 350] [350, 400] [100, 50] [150, 50] [200, 50] [50, 50] [100, 100] [100, 150] [100, 50] [150, 50] [100, 100] [350, 300] [300, 250] [300, 350] [250, 50] [300, 50] [350, 50] [400, 50] [450, 50] [450, 100] [0, 300] [50, 300] [100, 300] [100, 350] [100, 400] [50, 400] [150, 350] [200, 350] [100, 450] [150, 450] [200, 450]
++[300, 350] [300, 300] [300, 250] [300, 200] [100, 400] [100, 350] [100, 300] [100, 450] [100, 500] [0, 500] [0, 450] [0, 400] [450, 250] [500, 250] [450, 200] [450, 150] [450, 100] [450, 300] [300, 500] [250, 500] [200, 500] [200, 350] [250, 350] [300, 350] [200, 300] [200, 250] [350, 350] [400, 350] [450, 350] [300, 350] [250, 350] [200, 350] [350, 400] [50, 0] [100, 0] [150, 0] [200, 0] [50, 50] [450, 450] [450, 500] [0, 150] [50, 150] [100, 150] [150, 150] [150, 100] [200, 100] [250, 100] [300, 100] [350, 100]
++[450, 150] [450, 100] [450, 200] [450, 250] [450, 300] [200, 450] [250, 450] [300, 450] [300, 350] [350, 450] [150, 450] [300, 250] [350, 250] [400, 250] [450, 250] [300, 300] [0, 200] [0, 250] [200, 300] [200, 250] [200, 350] [350, 250] [350, 350] [0, 500] [50, 500] [100, 500] [150, 500] [0, 450] [300, 150] [350, 150] [250, 150] [200, 150] [300, 100] [300, 50] [300, 200] [450, 400] [450, 450] [450, 500] [100, 350] [100, 300] [100, 250] [100, 200] [100, 150] [100, 100] [100, 50] [50, 50] [0, 50] [100, 50] [150, 50]
++[350, 200] [350, 0] [400, 0] [350, 50] [350, 100] [50, 300] [100, 300] [150, 300] [50, 350] [150, 500] [250, 500] [300, 500] [350, 500] [200, 500] [250, 450] [250, 150] [300, 150] [200, 150] [250, 100] [250, 50] [250, 200] [350, 500] [400, 500] [300, 500] [350, 300] [350, 250] [150, 450] [250, 450] [150, 400] [150, 350] [400, 200] [450, 200] [350, 150] [450, 100] [500, 100] [350, 400] [400, 400] [450, 400] [450, 350] [200, 300] [250, 300] [0, 50] [50, 50] [100, 50] [150, 50] [100, 100] [100, 150] [100, 200] [50, 200]
++[300, 400] [250, 400] [200, 400] [150, 400] [300, 350] [300, 300] [300, 250] [300, 450] [200, 400] [250, 400] [200, 350] [200, 300] [200, 50] [250, 50] [200, 100] [200, 150] [50, 100] [100, 100] [250, 400] [300, 400] [350, 400] [400, 400] [200, 400] [150, 400] [300, 0] [350, 0] [300, 50] [300, 100] [150, 100] [200, 500] [200, 450] [200, 400] [200, 350] [50, 150] [50, 200] [50, 250] [50, 300] [50, 350] [50, 400] [100, 250] [400, 100] [400, 150] [400, 200] [450, 200] [500, 200] [450, 100] [400, 300] [450, 300] [500, 300]
++[150, 350] [200, 350] [250, 350] [150, 300] [150, 250] [150, 200] [200, 200] [250, 200] [150, 200] [100, 200] [200, 350] [50, 450] [50, 400] [50, 500] [400, 500] [450, 500] [350, 500] [100, 150] [200, 150] [100, 200] [200, 350] [250, 350] [150, 350] [100, 350] [50, 350] [200, 400] [450, 500] [500, 500] [450, 450] [350, 0] [350, 50] [350, 100] [350, 150] [250, 50] [200, 50] [150, 50] [100, 50] [50, 50] [0, 50] [0, 100] [0, 150] [0, 200] [0, 250] [200, 450] [150, 450] [350, 250] [350, 300] [350, 350] [350, 400] [450, 50] [450, 100] [450, 150] [450, 200] [450, 250] [450, 300] [450, 350] [450, 400]
++[150, 50] [200, 50] [250, 50] [100, 50] [50, 50] [150, 100] [300, 200] [350, 200] [400, 200] [450, 200] [250, 200] [300, 250] [300, 300] [300, 350] [100, 500] [100, 450] [100, 400] [0, 350] [0, 300] [0, 250] [0, 200] [0, 400] [50, 200] [100, 200] [150, 200] [200, 200] [50, 150] [200, 400] [50, 100] [50, 300] [500, 100] [450, 100] [400, 100] [350, 100] [500, 50] [250, 150] [250, 200] [150, 500] [200, 500] [150, 400] [450, 300] [400, 300] [400, 350] [400, 400] [400, 450] [450, 450] [500, 450] [300, 400] [300, 450] [200, 300] [200, 350]
++[0, 100] [100, 150] [150, 150] [200, 150] [250, 150] [50, 150] [100, 100] [100, 50] [400, 500] [450, 500] [350, 500] [300, 500] [250, 500] [250, 450] [350, 450] [200, 450] [150, 450] [250, 400] [250, 350] [250, 500] [400, 50] [400, 100] [400, 150] [400, 200] [250, 0] [300, 0] [300, 350] [0, 150] [400, 0] [350, 0] [250, 50] [50, 200] [50, 150] [50, 250] [50, 300] [300, 300] [350, 300] [300, 250] [200, 250] [150, 250] [150, 300] [150, 350] [100, 350] [50, 350] [500, 100] [500, 150] [500, 200] [500, 250] [500, 300] [500, 350] [500, 400] [450, 400] [50, 450] [50, 500]
++[50, 0] [50, 50] [50, 100] [50, 150] [100, 150] [150, 150] [200, 150] [250, 150] [50, 150] [100, 200] [450, 350] [450, 400] [450, 450] [450, 500] [450, 50] [450, 0] [500, 0] [400, 0] [350, 0] [300, 0] [450, 50] [450, 100] [450, 150] [500, 500] [450, 500] [250, 200] [250, 150] [250, 100] [100, 350] [50, 350] [100, 400] [100, 450] [100, 300] [150, 300] [200, 300] [250, 300] [300, 300] [350, 300] [350, 250] [350, 350] [350, 400] [350, 200] [350, 150] [300, 400] [250, 400] [200, 400] [200, 450] [200, 500] [400, 250] [100, 50] [150, 50]
++[450, 50] [400, 50] [350, 50] [500, 400] [450, 400] [400, 400] [500, 350] [500, 300] [500, 450] [500, 500] [350, 200] [400, 200] [300, 200] [250, 200] [350, 150] [350, 250] [350, 300] [450, 500] [500, 500] [250, 350] [300, 350] [350, 350] [400, 350] [250, 400] [250, 450] [500, 150] [500, 200] [100, 300] [150, 300] [200, 300] [250, 300] [100, 250] [100, 200] [100, 150] [250, 350] [250, 300] [250, 400] [50, 400] [50, 450] [100, 450] [150, 450] [200, 450] [0, 50] [50, 50] [100, 50] [150, 50] [200, 50] [250, 50] [300, 50]
++[100, 0] [150, 0] [200, 0] [100, 50] [450, 100] [500, 100] [400, 100] [350, 100] [300, 100] [450, 150] [450, 200] [350, 400] [400, 400] [450, 400] [300, 400] [250, 400] [200, 400] [350, 350] [350, 450] [350, 500] [150, 0] [200, 0] [250, 0] [300, 0] [150, 150] [250, 350] [450, 50] [450, 100] [450, 450] [450, 400] [450, 350] [50, 450] [50, 50] [50, 100] [50, 150] [50, 200] [50, 250] [100, 250] [150, 250] [350, 200] [350, 250] [350, 300] [300, 200] [250, 200] [50, 350] [50, 400] [100, 450] [150, 450] [200, 450]
++[450, 100] [450, 50] [450, 150] [450, 200] [300, 300] [350, 300] [400, 300] [450, 300] [250, 300] [150, 300] [300, 250] [300, 200] [300, 150] [0, 350] [0, 400] [0, 450] [100, 350] [150, 350] [100, 400] [400, 500] [450, 500] [500, 500] [350, 500] [300, 500] [250, 500] [400, 450] [400, 400] [0, 450] [0, 400] [0, 350] [0, 300] [450, 150] [450, 100] [0, 350] [0, 300] [0, 250] [200, 300] [250, 400] [300, 400] [350, 400] [50, 250] [50, 200] [100, 200] [150, 200] [100, 150] [100, 100] [50, 50] [100, 50] [150, 50] [200, 50] [250, 50] [300, 50] [350, 50] [400, 50]
++[300, 0] [350, 0] [450, 500] [500, 500] [250, 0] [300, 0] [350, 0] [400, 0] [200, 0] [150, 0] [250, 50] [250, 100] [50, 100] [100, 100] [350, 150] [400, 150] [300, 150] [250, 150] [200, 150] [350, 100] [200, 0] [250, 0] [150, 0] [100, 0] [300, 200] [400, 200] [300, 150] [300, 250] [300, 300] [300, 350] [300, 400] [300, 450] [450, 200] [450, 250] [450, 300] [450, 350] [450, 400] [0, 300] [50, 300] [100, 300] [150, 300] [200, 300] [200, 350] [200, 400] [150, 400] [100, 400] [50, 400] [50, 450] [0, 200] [50, 200] [100, 200]
++[500, 500] [450, 500] [400, 500] [350, 500] [500, 450] [500, 400] [500, 350] [100, 50] [150, 50] [200, 50] [100, 450] [50, 50] [200, 450] [150, 450] [50, 450] [100, 400] [100, 350] [100, 300] [100, 500] [200, 400] [100, 400] [500, 0] [450, 0] [500, 50] [300, 500] [350, 500] [400, 500] [50, 100] [150, 300] [200, 300] [250, 300] [300, 300] [150, 250] [250, 400] [300, 400] [350, 400] [400, 400] [0, 200] [50, 200] [50, 150] [100, 150] [150, 150] [200, 150] [250, 150] [250, 200] [300, 200] [350, 200] [400, 200] [400, 250] [400, 300] [250, 50] [300, 50] [350, 50] [350, 100] [400, 100]
++[350, 350] [350, 300] [350, 250] [350, 400] [500, 400] [0, 100] [50, 100] [100, 100] [150, 100] [0, 50] [250, 500] [450, 100] [200, 500] [150, 350] [200, 350] [100, 350] [150, 400] [150, 450] [150, 500] [500, 450] [350, 450] [300, 450] [250, 450] [350, 400] [350, 350] [350, 300] [500, 250] [450, 250] [500, 200] [500, 300] [50, 200] [100, 200] [150, 200] [200, 200] [250, 200] [250, 150] [250, 100] [250, 50] [250, 0] [100, 300] [50, 300] [0, 450] [50, 450] [250, 300] [250, 350] [350, 0] [350, 50] [350, 100] [350, 150] [400, 100] [450, 50]
++[100, 150] [50, 150] [100, 100] [100, 200] [100, 250] [450, 350] [500, 350] [450, 400] [450, 450] [350, 200] [300, 200] [100, 50] [150, 500] [250, 200] [350, 150] [400, 100] [350, 100] [300, 100] [400, 50] [400, 200] [150, 400] [150, 350] [150, 300] [150, 450] [150, 150] [100, 150] [150, 50] [150, 250] [300, 50] [350, 100] [350, 150] [0, 500] [50, 500] [100, 500] [0, 450] [0, 400] [250, 500] [250, 450] [250, 400] [250, 350] [250, 300] [300, 300] [350, 300] [350, 350] [350, 400] [350, 450] [450, 100] [500, 100]
++[500, 450] [450, 450] [400, 450] [350, 450] [500, 400] [500, 350] [500, 300] [500, 500] [50, 150] [50, 200] [50, 100] [50, 50] [50, 150] [0, 500] [50, 500] [400, 200] [450, 200] [350, 200] [300, 200] [250, 200] [400, 250] [400, 300] [100, 200] [150, 200] [200, 200] [50, 200] [100, 100] [100, 500] [50, 500] [100, 450] [100, 400] [100, 350] [0, 0] [50, 0] [100, 0] [50, 300] [50, 350] [150, 350] [200, 350] [200, 400] [200, 450] [250, 450] [300, 300] [300, 350] [350, 350] [400, 350] [200, 0] [200, 50] [250, 50] [300, 50] [350, 50] [400, 50] [450, 50] [250, 100] [350, 100]
++[250, 0] [300, 0] [200, 0] [150, 0] [100, 0] [250, 50] [250, 100] [250, 150] [100, 500] [150, 500] [200, 500] [50, 500] [50, 450] [50, 500] [400, 250] [450, 250] [500, 250] [350, 250] [300, 400] [250, 400] [250, 50] [150, 50] [50, 400] [50, 350] [100, 100] [150, 100] [50, 100] [100, 150] [100, 200] [350, 400] [350, 450] [400, 450] [450, 450] [450, 400] [450, 350] [450, 300] [200, 250] [200, 300] [150, 300] [150, 350] [350, 150] [400, 150] [450, 150] [450, 100] [450, 50] [400, 50] [400, 0]
++[0, 150] [50, 150] [100, 150] [150, 150] [0, 100] [0, 50] [150, 150] [200, 150] [250, 150] [150, 100] [150, 200] [300, 150] [400, 450] [400, 400] [400, 500] [300, 350] [350, 350] [400, 350] [250, 350] [200, 350] [150, 350] [300, 300] [300, 250] [500, 250] [500, 300] [0, 350] [0, 400] [0, 450] [0, 500] [0, 100] [0, 50] [0, 150] [0, 200] [0, 250] [300, 50] [350, 50] [400, 50] [450, 50] [300, 100] [150, 50] [100, 50] [100, 350] [100, 400] [100, 450] [150, 450] [200, 450] [250, 450] [300, 450] [350, 250] [400, 250] [400, 200] [400, 150] [150, 250] [100, 250]
++[300, 500] [250, 500] [200, 500] [150, 500] [500, 0] [500, 50] [200, 100] [200, 150] [200, 200] [450, 500] [300, 500] [300, 450] [300, 400] [300, 350] [200, 0] [250, 0] [300, 0] [350, 0] [200, 50] [200, 100] [200, 150] [100, 350] [150, 350] [50, 350] [100, 300] [100, 400] [50, 150] [100, 150] [150, 150] [200, 150] [50, 100] [50, 50] [50, 200] [0, 450] [400, 150] [450, 400] [450, 350] [450, 300] [450, 250] [450, 200] [450, 150] [500, 150] [400, 100] [350, 100] [300, 100] [300, 150] [300, 200] [300, 250] [350, 250]
++[400, 250] [350, 250] [300, 250] [400, 200] [400, 150] [400, 100] [0, 150] [0, 100] [0, 50] [50, 400] [50, 450] [400, 100] [400, 150] [400, 200] [250, 450] [300, 450] [350, 450] [350, 0] [350, 50] [150, 350] [200, 350] [150, 400] [150, 450] [150, 500] [400, 100] [350, 100] [300, 100] [400, 150] [400, 200] [300, 350] [350, 350] [400, 350] [450, 350] [500, 350] [450, 400] [450, 450] [300, 200] [250, 200] [200, 200] [200, 150] [200, 100] [200, 50] [150, 50] [100, 50] [100, 100] [100, 150] [100, 200] [100, 250] [50, 250] [50, 300] [50, 350]
