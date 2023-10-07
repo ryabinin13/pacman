@@ -1,7 +1,7 @@
-import math
 import time
 import pygame
 import random
+import math
 pygame.init()
 
 score = 0 #счетчик очков
@@ -13,60 +13,42 @@ class Pacman:
         self.y = y
         self.size = 20
         self.direction = 'right'
+        self.visibility = 75
+
     def draw(self):
-        pygame.draw.circle(sc, (255,255,0), (self.x, self.y), self.size)
+        pygame.draw.circle(sc, (255,255,0), (self.x + SIZE_ONE_CELL/2, self.y + SIZE_ONE_CELL/2), self.size)
     def move(self):
-        pygame.draw.circle(sc, (0, 0, 0), (self.x, self.y), self.size)
+        pygame.draw.circle(sc, (0, 0, 0), (self.x + SIZE_ONE_CELL/2, self.y + SIZE_ONE_CELL/2), self.size)
         if self.direction == 'up':
-            # Проверяем, есть ли стена на пути движения вверх
             for wall in walls:
-                if self.y - self.size >= wall[1]  and self.y - self.size <= wall[1] + SIZE_ONE_CELL*2 and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:
+                if self.y - SIZE_ONE_CELL == wall[1] and self.x == wall[0]:
                     return
-            if self.y <= SIZE_ONE_CELL:
+            if self.y == 0:
                 return
-            # Если стены нет, то изменяем координату y
-            if self.y > 0:
-                self.y -= SIZE_ONE_CELL
+            self.y -= SIZE_ONE_CELL
         elif self.direction == 'down':
-            # Проверяем, есть ли стена на пути движения вниз
             for wall in walls:
-                if self.y + self.size >= wall[1] - SIZE_ONE_CELL and self.y + self.size <= wall[1] + SIZE_ONE_CELL and self.x >= wall[0] and self.x <= wall[0] + SIZE_ONE_CELL:
+                if self.y + SIZE_ONE_CELL == wall[1] and self.x == wall[0]:
                     return
-            if self.y >=SIZE-SIZE_ONE_CELL:
+            if self.y == SIZE - SIZE_ONE_CELL:
                 return
-            # Если стены нет, то изменяем координату y
-            if self.y < SIZE - self.size:
-                self.y += SIZE_ONE_CELL
+            self.y += SIZE_ONE_CELL
         elif self.direction == 'right':
-            # Проверяем, есть ли стена на пути движения вправо
             for wall in walls:
-                if self.x + self.size >= wall[0] - SIZE_ONE_CELL and self.x + self.size <= wall[0] + SIZE_ONE_CELL and self.y >= wall[1] and self.y <= wall[1] +SIZE_ONE_CELL:
+                if self.y == wall[1] and self.x + SIZE_ONE_CELL == wall[0]:
                     return
-            if self.x >=SIZE-SIZE_ONE_CELL:
+            if self.x ==SIZE-SIZE_ONE_CELL:
                 return
-            # Если стены нет, то изменяем координату x
-            if self.x < SIZE - self.size:
-                self.x += SIZE_ONE_CELL
+            self.x += SIZE_ONE_CELL
         elif self.direction == 'left':
-            # Проверяем, есть ли стена на пути движения влево
             for wall in walls:
-                if self.x - self.size >= wall[0] and self.x - self.size <= wall[0] + SIZE_ONE_CELL*2 and self.y >= wall[1] and self.y <= wall[1] + SIZE_ONE_CELL:
+                if self.y == wall[1] and self.x - SIZE_ONE_CELL == wall[0]:
                     return
-            if self.x <=SIZE_ONE_CELL:
+            if self.x == 0:
                 return
-            # Если стены нет, то изменяем координату x
-            if self.x > 0:
-                self.x -= SIZE_ONE_CELL
+            self.x -= SIZE_ONE_CELL
 
-def add_data_to_file(data, filename):
-    try:
-        with open(filename, 'a') as file:
-            for d in data:
-                file.write(str(d) + ' ')
-            file.write('\n')
-    except:
-        print("Ошибка")
-
+#считываю из файла координаты стен
 def read_list_from_line(filename, line_number, separator=' '):
     result = []
     try:
@@ -81,105 +63,26 @@ def read_list_from_line(filename, line_number, separator=' '):
                 res = [int(item.replace(',', '')) for item in result]
                 r = list(zip(res[::2], res[1::2]))
             return r
-
     except:
         print("Ошибка")
 
-def check_block(walls, random_XY):
-    for w1 in walls:
-        if (random_XY[0] - SIZE_ONE_CELL == w1[0]) and (random_XY[1] == w1[1]):
-            for w2 in walls:
-                if (random_XY[0] - SIZE_ONE_CELL == w2[0]) and (random_XY[1] - SIZE_ONE_CELL == w2[1]):
-                    for w3 in walls:
-                        if (random_XY[0] == w3[0]) and (random_XY[1] - SIZE_ONE_CELL == w3[1]):
-                            return True
-            for w4 in walls:
-                if (random_XY[0] - SIZE_ONE_CELL == w4[0]) and (random_XY[1] + SIZE_ONE_CELL == w4[1]):
-                    for w5 in walls:
-                        if (random_XY[0] == w5[0]) and (random_XY[1] + SIZE_ONE_CELL == w5[1]):
-                            return True
-    for w6 in walls:
-        if (random_XY[0] + SIZE_ONE_CELL == w6[0]) and (random_XY[1] == w6[1]):
-            for w7 in walls:
-                if (random_XY[0] + SIZE_ONE_CELL == w7[0]) and (random_XY[1] - SIZE_ONE_CELL == w7[1]):
-                    for w8 in walls:
-                        if (random_XY[0] == w8[0]) and (random_XY[1] - SIZE_ONE_CELL == w8[1]):
-                            return True
-            for w9 in walls:
-                if (random_XY[0] + SIZE_ONE_CELL == w9[0]) and (random_XY[1] + SIZE_ONE_CELL == w9[1]):
-                    for w10 in walls:
-                        if (random_XY[0] == w10[0]) and (random_XY[1] + SIZE_ONE_CELL == w10[1]):
-                            return True
-    return False
-
-
-FPS = 60
 COUNT_OF_CELL = 11
 SIZE_ONE_CELL = 50
 SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
 COUNT_OF_WALL =8
-COUNT_OF_AWARDS = 10
+COUNT_OF_AWARDS = 30
 
-pacman = Pacman(SIZE/2, SIZE/2)
+pacman = Pacman(SIZE/2 - SIZE_ONE_CELL/2, SIZE/2 - SIZE_ONE_CELL/2)
+
 sc = pygame.display.set_mode((SIZE, SIZE))
 pygame.display.set_caption('pacman')
-clock = pygame.time.Clock()
 
+#добавляем стены
+random_number_of_maps = random.randint(1,100)
+walls_ = read_list_from_line('maps.txt', random_number_of_maps)
 walls = []
-#строим стены
-
-for j in range(0, COUNT_OF_WALL):
-    random_XY = [random.randint(0, SIZE) for i in range(2)]
-    random_XY = [random_XY[i] - random_XY[i] % SIZE_ONE_CELL for i in range(2)]
-
-
-    if check_block(walls, random_XY) == False:
-        walls.append(random_XY)
-        pygame.draw.rect(sc, (200,200,200), (random_XY[0], random_XY[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-        random_right, random_left, random_up, random_down = [random.randint(0,4) for _ in range(4)]
-
-
-    for r in range(1, random_right):
-        coord = [random_XY[0] + r * SIZE_ONE_CELL, random_XY[1]]
-        if coord[0] > SIZE-SIZE_ONE_CELL:
-            continue
-        elif check_block(walls, coord) == False:
-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-            walls.append(coord)
-
-    for l in range(1, random_left):
-        coord = [random_XY[0] -l * SIZE_ONE_CELL, random_XY[1]]
-        if coord[0] < 0+SIZE_ONE_CELL:
-            continue
-        elif check_block(walls, coord) == False:
-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-            walls.append(coord)
-    for u in range(1, random_up):
-        coord = [random_XY[0], random_XY[1] -u * SIZE_ONE_CELL]
-        if coord[1] < 0+SIZE_ONE_CELL:
-            continue
-        elif check_block(walls, coord) == False:
-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-            walls.append(coord)
-    for d in range(1, random_down):
-        coord = [random_XY[0], random_XY[1] +d * SIZE_ONE_CELL]
-        if coord[1] > SIZE-SIZE_ONE_CELL:
-            continue
-        elif check_block(walls, coord) == False:
-            pygame.draw.rect(sc, (200, 200, 200), (coord[0], coord[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
-            walls.append(coord)
-
-
-
-#walls_ = read_list_from_line('maps.txt', 8)
-#walls = []
 #for w in walls_:
-#    walls.append(list(w))
-walls_unique = list(set(tuple(w) for w in walls))
-print(len(walls_unique))
-
-for w in walls:
-    pygame.draw.rect(sc, (200,200,200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+#   walls.append(list(w))
 
 #строим награды
 awards = []
@@ -192,19 +95,14 @@ while( a != COUNT_OF_AWARDS ):
     for wall in walls:
         if random_XY == wall:
             cross = True
-    random_XY = [int(random_XY[i] + SIZE_ONE_CELL / 2) for i in range(2)]
     for aw in awards:
         if random_XY[1] == aw[1] and random_XY[0] == aw[0]:
             cross = True
+    if random_XY[0] == pacman.x and random_XY[1] == pacman.y:
+        cross = True
     if cross == False:
-        pygame.draw.circle(sc, (50, 100, 150), (random_XY[0], random_XY[1]), SIZE_ONE_CELL / 4)
-        awards.append((random_XY[0], random_XY[1]))
+        awards.append([random_XY[0], random_XY[1]])
         a += 1
-#строим клетки
-for i in range(SIZE):
-    if i % SIZE_ONE_CELL == 0:
-        pygame.draw.line(sc, (255,0,255), (0,i),(SIZE,i), 1)
-        pygame.draw.line(sc, (255, 0, 255), (i,0), (i,SIZE), 1)
 
 def score_count():
     global score
@@ -216,30 +114,208 @@ def score_count():
     sc.blit(score_text, (2, 2))
 
 pacman.draw()
+def create_map():
+    #строю стены
+    for w in walls:
+        pygame.draw.rect(sc, (200, 200, 200), (w[0], w[1], SIZE_ONE_CELL, SIZE_ONE_CELL))
+    #строю награды
+    for award in awards:
+        pygame.draw.circle(sc, (50, 100, 150), (award[0] + SIZE_ONE_CELL / 2, award[1] + SIZE_ONE_CELL / 2), SIZE_ONE_CELL / 4)
+    #строю клетки
+    for i in range(SIZE):
+        if i % SIZE_ONE_CELL == 0:
+            pygame.draw.line(sc, (255, 0, 255), (0, i), (SIZE, i), 1)
+            pygame.draw.line(sc, (255, 0, 255), (i, 0), (i, SIZE), 1)
 
+fog_of_war = pygame.Surface((SIZE, SIZE))
+fog_of_war.fill((0, 0, 0))
+def visibility():
+    pygame.draw.rect(fog_of_war, (60, 60, 60), (pacman.x + 25-pacman.visibility, pacman.y + 25-pacman.visibility,pacman.visibility*2, pacman.visibility*2), 0)
+    fog_of_war.set_colorkey((60, 60, 60))
+    sc.blit(fog_of_war, (0, 0))
+    pygame.display.flip()
+
+map = [[i, j, 0] for i in range(SIZE) for j in range(SIZE) if (i % SIZE_ONE_CELL == 0) and (j % SIZE_ONE_CELL == 0)]
+
+def clear_fog(m):
+    if walls.count([m[0], m[1]]):
+        m[2] = 2
+    elif awards.count([m[0], m[1]]):
+        m[2] = 3
+    else:
+        m[2] = 1
+for m in map:
+    if [m[0], m[1]] in [[200, 200], [250, 200], [300, 200], [200, 250], [250, 250], [300, 250], [200, 300], [250, 300], [300, 300]]:
+        clear_fog(m)
+
+for i in range(SIZE // SIZE_ONE_CELL):
+    for j in range(0, len(map), SIZE // SIZE_ONE_CELL):
+        print(map[i+j][2], end=" ")
+    print()
+print()
+def alghoritm_move():
+    three = []
+    for m in map:
+        if m[2] == 3:
+            move = []
+            move_x = int((m[0] - pacman.x)/SIZE_ONE_CELL)
+            move_y = int((m[1] - pacman.y)/SIZE_ONE_CELL)
+            if move_x < 0:
+                for x in range(abs(move_x)):
+                    if (pacman.x - SIZE_ONE_CELL != ( w[0] for w in walls )) and pacman.x != 0:
+                        move.append('l')
+            if move_x > 0:
+                for x in range(abs(move_x)):
+                    if (pacman.x + SIZE_ONE_CELL != ( w[0] for w in walls )) and pacman.x != 500:
+                        move.append('r')
+            if move_y < 0:
+                for x in range(abs(move_y)):
+                    if (pacman.y + SIZE_ONE_CELL != ( w[0] for w in walls )) and pacman.y != 0:
+                        move.append('u')
+            if (move_y > 0):
+                for x in range(abs(move_y)):
+                    if (pacman.y - SIZE_ONE_CELL != ( w[0] for w in walls )) and pacman.y != 500:
+                        move.append('d')
+            move.append(m)
+            three.append(move)
+            #
+            #
+            #
+        elif m[2] == 0:
+            move = []
+            move_x = int((m[0] - pacman.x)/SIZE_ONE_CELL)
+            move_y = int((m[1] - pacman.y)/SIZE_ONE_CELL)
+            if move_x < 0:
+                for x in range(abs(move_x)):
+                    if (pacman.x - SIZE_ONE_CELL == ( w[0] for w in walls )) or pacman.x == 0:
+                        if (pacman.y + SIZE_ONE_CELL != ( w[1] for w in walls )) or pacman.y != 0:
+                            move.append('d')
+                        else:
+                            move.append('u')
+                    else:
+                        move.append('r')
+                move.append('l')
+            if move_x > 0:
+                for x in range(abs(move_x)):
+                    if (pacman.x + SIZE_ONE_CELL == ( w[0] for w in walls )) or pacman.x == 500:
+                        if(pacman.y + SIZE_ONE_CELL != ( w[1] for w in walls )) or pacman.y != 0:
+                            move.append('d')
+                        else:
+                            move.append('u')
+                    else:
+                        move.append('l')
+                move.append('r')
+            if move_y < 0:
+                for x in range(abs(move_y)):
+                    if (pacman.y - SIZE_ONE_CELL == ( w[1] for w in walls )) or pacman.y == 0:
+                        if (pacman.x + SIZE_ONE_CELL != (w[0] for w in walls)) or pacman.x != 500:
+                            move.append('r')
+                        else:
+                            move.append('l')
+                    else:
+                        move.append('d')
+                move.append('u')
+            if (move_y > 0):
+                for x in range(abs(move_y)):
+                    if (pacman.y + SIZE_ONE_CELL == ( w[1] for w in walls )) or pacman.y == 500:
+                        if (pacman.x + SIZE_ONE_CELL != (w[0] for w in walls)) or pacman.x != 500:
+                            move.append('r')
+                        else:
+                            move.append('l')
+                    else:
+                        move.append('u')
+                move.append('d')
+            move.append(m)
+            three.append(move)
+
+    best_way = []
+    if three:
+        best_way = min(three, key=len)
+        best_way[-1][2] = 1
+        best_way.pop()
+    else:
+        random_way = random.randint(1, 4)
+        if random_way == 1:
+            best_way.append('r')
+        if random_way == 2 :
+            best_way.append('l')
+        if random_way == 3 :
+            best_way.append('u')
+        if random_way == 4 :
+            best_way.append('d')
+    currentXY = [pacman.x, pacman.y]
+    for bv in best_way:
+        if bv == 'l':
+            for m in map:
+                if [m[0], m[1]] in [[currentXY[0] * SIZE_ONE_CELL, currentXY[1]], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
+                    clear_fog(m)
+            currentXY[0] = currentXY[0] - SIZE_ONE_CELL
+        elif bv == 'r':
+            for m in map:
+                if [m[0], m[1]] in [[currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1]], [currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL], [currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
+                    clear_fog(m)
+            currentXY[0] = currentXY[0] + SIZE_ONE_CELL
+        elif bv == 'u':
+            for m in map:
+                if [m[0], m[1]] in [[currentXY[0], currentXY[1] - 2 * SIZE_ONE_CELL], [currentXY[0] - SIZE_ONE_CELL, currentXY[1] - 2 * SIZE_ONE_CELL], [currentXY[0] + SIZE_ONE_CELL, currentXY[1] - 2* SIZE_ONE_CELL]]:
+                    clear_fog(m)
+            currentXY[1] = currentXY[1] - SIZE_ONE_CELL
+        elif bv == 'd':
+            for m in map:
+                if [m[0], m[1]] in [[currentXY[0], currentXY[1] + 2 * SIZE_ONE_CELL], [currentXY[0] - SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL], [currentXY[0] + SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL]]:
+                    clear_fog(m)
+            currentXY[1] = currentXY[1] + SIZE_ONE_CELL
+    for i in range(SIZE // SIZE_ONE_CELL):
+        for j in range(0, len(map), SIZE // SIZE_ONE_CELL):
+            print(map[i+j][2], end=" ")
+        print()
+    print()
+    return best_way
+
+create_map()
+visibility()
 pygame.display.flip()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
         if score == COUNT_OF_AWARDS:
-            time.sleep(10)
+            time.sleep(1)
             exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
                 pacman.direction = "right"
                 pacman.move()
+                create_map()
+                visibility()
             elif event.key == pygame.K_LEFT:
                 pacman.direction = "left"
                 pacman.move()
+                create_map()
+                visibility()
             elif event.key == pygame.K_UP:
                 pacman.direction = "up"
                 pacman.move()
+                create_map()
+                visibility()
             elif event.key == pygame.K_DOWN:
                 pacman.direction = "down"
                 pacman.move()
-            elif event.key == pygame.K_s:
-                add_data_to_file(walls, 'maps.txt')
+                create_map()
+                visibility()
+            elif event.key == pygame.K_SPACE:
+                for i in range(200):
+                    move = alghoritm_move()
+                    for m in move:
+                        directions = {'r' : "right", 'l' :"left", 'u':"up", 'd':"down"}
+                        pacman.direction = directions[m]
+                        pacman.move()
+                        create_map()
+                        visibility()
+                        score_count()
+                        pacman.draw()
+                        pygame.display.flip()
+                        pygame.time.delay(200)
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
