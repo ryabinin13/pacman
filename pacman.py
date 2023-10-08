@@ -1,7 +1,6 @@
 import time
 import pygame
 import random
-import math
 pygame.init()
 
 score = 0 #счетчик очков
@@ -47,7 +46,11 @@ class Pacman:
             if self.x == 0:
                 return
             self.x -= SIZE_ONE_CELL
-
+class Node:
+    def __init__(self, x,y, parent=None):
+        self.x = x
+        self.y = y
+        self.parent = parent
 #считываю из файла координаты стен
 def read_list_from_line(filename, line_number, separator=' '):
     result = []
@@ -70,7 +73,7 @@ COUNT_OF_CELL = 11
 SIZE_ONE_CELL = 50
 SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
 COUNT_OF_WALL =8
-COUNT_OF_AWARDS = 50
+COUNT_OF_AWARDS = 15
 
 pacman = Pacman(SIZE/2 - SIZE_ONE_CELL/2, SIZE/2 - SIZE_ONE_CELL/2)
 
@@ -81,8 +84,8 @@ pygame.display.set_caption('pacman')
 random_number_of_maps = random.randint(1,100)
 walls_ = read_list_from_line('maps.txt', random_number_of_maps)
 walls = []
-#for w in walls_:
-#   walls.append(list(w))
+for w in walls_:
+  walls.append(list(w))
 
 #строим награды
 awards = []
@@ -148,52 +151,114 @@ for m in map:
     if [m[0], m[1]] in [[200, 200], [250, 200], [300, 200], [200, 250], [250, 250], [300, 250], [200, 300], [250, 300], [300, 300]]:
         clear_fog(m)
 
-for i in range(SIZE // SIZE_ONE_CELL):
-    for j in range(0, len(map), SIZE // SIZE_ONE_CELL):
-        print(map[i+j][2], end=" ")
-    print()
-print()
-def alghoritm_move():
+def is_fog(position):
+    for m in map:
+        if (position.x == m[0]) and (position.y == m[1]) and (m[2] == 0):
+            return True
+    return False
+def check_fog_of_war():
+    currentXY = Node(pacman.x, pacman.y)
+    neighbors = [currentXY]
+    start = None
+    while True:
+        current = neighbors.pop(0)
+        if is_fog(current):
+            start = current
+            break
+        for n in [[current.x + SIZE_ONE_CELL, current.y], [current.x - SIZE_ONE_CELL, current.y],
+                  [current.x, current.y + SIZE_ONE_CELL], [current.x, current.y - SIZE_ONE_CELL]]:
+            if n[0] < 0 or n[0] >= SIZE or n[1] < 0 or n[1] >= SIZE:
+                continue
+            if walls.count([n[0], n[1]]) > 0:
+                neighbor = Node(n[0], n[1])
+                if is_fog(neighbor):
+
+                    neighbors.append(neighbor)
+                continue
+            neighbor = Node(n[0], n[1])
+            neighbors.append(neighbor)
+    move = []
+    neighbors = [start]
+    finish = None
+    while True:
+        current = neighbors.pop(0)
+        if (current.x == pacman.x) and (current.y == pacman.y):
+            finish = current.parent
+            break
+        for n in [[current.x + SIZE_ONE_CELL, current.y], [current.x - SIZE_ONE_CELL, current.y],
+                  [current.x, current.y + SIZE_ONE_CELL], [current.x, current.y - SIZE_ONE_CELL]]:
+            if n[0] < 0 or n[0] >= SIZE or n[1] < 0 or n[1] >= SIZE:
+                continue
+            if walls.count([n[0], n[1]]) > 0:
+                continue
+            neighbor = Node(n[0], n[1], current)
+            neighbors.append(neighbor)
+    if finish is not None:
+        while current.parent is not None:
+            move_x = int((current.parent.x - current.x) / SIZE_ONE_CELL)
+            move_y = int((current.parent.y - current.y) / SIZE_ONE_CELL)
+            if move_x < 0:
+                move.append('l')
+            if move_x > 0:
+                move.append('r')
+            if move_y < 0:
+                move.append('u')
+            if move_y > 0:
+                move.append('d')
+            current = current.parent
+        move.append([finish.x, finish.y, 1])
+    return move
+def check_awards():
     three = []
     for m in map:
         if m[2] == 3:
+            award = Node(m[0], m[1])
             move = []
-            move_x = int((m[0] - pacman.x)/SIZE_ONE_CELL)
-            move_y = int((m[1] - pacman.y)/SIZE_ONE_CELL)
-            if move_x < 0:
-                for x in range(abs(move_x)):
-                    move.append('l')
-            if move_x > 0:
-                for x in range(abs(move_x)):
-                    move.append('r')
-            if move_y < 0:
-                for x in range(abs(move_y)):
-                    move.append('u')
-            if move_y > 0:
-                for x in range(abs(move_y)):
-                    move.append('d')
-            move.append(m)
-            three.append(move)
-    best_way = []
+            neighbors = [award]
+            finish = None
+            while True:
+                current = neighbors.pop(0)
+                if (current.x == pacman.x) and (current.y == pacman.y):
+                    finish = current
+                    break
+                for n in [[current.x + SIZE_ONE_CELL, current.y], [current.x - SIZE_ONE_CELL, current.y], [current.x, current.y + SIZE_ONE_CELL], [current.x, current.y - SIZE_ONE_CELL]]:
+                    if n[0] < 0 or n[0] >= SIZE or n[1] < 0 or n[1] >= SIZE:
+                        continue
+                    if walls.count([n[0], n[1]]) > 0:
+                        continue
+                    neighbor = Node(n[0], n[1], current)
+                    neighbors.append(neighbor)
+            if finish is not None:
+                while current.parent is not None:
+                    move_x = int((current.parent.x - current.x) / SIZE_ONE_CELL)
+                    move_y = int((current.parent.y - current.y) / SIZE_ONE_CELL)
+                    if move_x < 0:
+                        move.append('l')
+                    if move_x > 0:
+                        move.append('r')
+                    if move_y < 0:
+                        move.append('u')
+                    if move_y > 0:
+                        move.append('d')
+                    current = current.parent
+                move.append(m)
+                three.append(move)
+    return three
+def alghoritm_move():
+    three = check_awards()
     if three:
         best_way = min(three, key=len)
         best_way[-1][2] = 1
         best_way.pop()
     else:
-        random_way = random.randint(1, 4)
-        if random_way == 1:
-            best_way.append('r')
-        if random_way == 2:
-            best_way.append('l')
-        if random_way == 3:
-            best_way.append('u')
-        if random_way == 4:
-            best_way.append('d')
+        best_way = check_fog_of_war()
+        best_way[-1][2] = 1
+        best_way.pop()
     currentXY = [pacman.x, pacman.y]
     for bv in best_way:
         if bv == 'l':
             for m in map:
-                if [m[0], m[1]] in [[currentXY[0] * SIZE_ONE_CELL, currentXY[1]], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
+                if [m[0], m[1]] in [[currentXY[0] - 2*SIZE_ONE_CELL, currentXY[1]], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
                     clear_fog(m)
             currentXY[0] = currentXY[0] - SIZE_ONE_CELL
         elif bv == 'r':
@@ -211,11 +276,6 @@ def alghoritm_move():
                 if [m[0], m[1]] in [[currentXY[0], currentXY[1] + 2 * SIZE_ONE_CELL], [currentXY[0] - SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL], [currentXY[0] + SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL]]:
                     clear_fog(m)
             currentXY[1] = currentXY[1] + SIZE_ONE_CELL
-    for i in range(SIZE // SIZE_ONE_CELL):
-        for j in range(0, len(map), SIZE // SIZE_ONE_CELL):
-            print(map[i+j][2], end=" ")
-        print()
-    print()
     return best_way
 
 create_map()
@@ -250,7 +310,7 @@ while True:
                 create_map()
                 visibility()
             elif event.key == pygame.K_SPACE:
-                for i in range(200):
+                for i in range(50):
                     move = alghoritm_move()
                     for m in move:
                         directions = {'r' : "right", 'l' :"left", 'u':"up", 'd':"down"}
@@ -261,7 +321,7 @@ while True:
                         score_count()
                         pacman.draw()
                         pygame.display.flip()
-                        pygame.time.delay(200)
+                        pygame.time.delay(100)
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
