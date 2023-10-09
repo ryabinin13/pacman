@@ -51,6 +51,7 @@ class Node:
         self.x = x
         self.y = y
         self.parent = parent
+
 #считываю из файла координаты стен
 def read_list_from_line(filename, line_number, separator=' '):
     result = []
@@ -73,7 +74,7 @@ COUNT_OF_CELL = 11
 SIZE_ONE_CELL = 50
 SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
 COUNT_OF_WALL =8
-COUNT_OF_AWARDS = 15
+COUNT_OF_AWARDS = 12
 
 pacman = Pacman(SIZE/2 - SIZE_ONE_CELL/2, SIZE/2 - SIZE_ONE_CELL/2)
 
@@ -170,33 +171,22 @@ def check_fog_of_war():
             if n[0] < 0 or n[0] >= SIZE or n[1] < 0 or n[1] >= SIZE:
                 continue
             if walls.count([n[0], n[1]]) > 0:
-                neighbor = Node(n[0], n[1])
+                neighbor = Node(n[0], n[1], current)
                 if is_fog(neighbor):
-
                     neighbors.append(neighbor)
-                continue
-            neighbor = Node(n[0], n[1])
-            neighbors.append(neighbor)
-    move = []
-    neighbors = [start]
-    finish = None
-    while True:
-        current = neighbors.pop(0)
-        if (current.x == pacman.x) and (current.y == pacman.y):
-            finish = current.parent
-            break
-        for n in [[current.x + SIZE_ONE_CELL, current.y], [current.x - SIZE_ONE_CELL, current.y],
-                  [current.x, current.y + SIZE_ONE_CELL], [current.x, current.y - SIZE_ONE_CELL]]:
-            if n[0] < 0 or n[0] >= SIZE or n[1] < 0 or n[1] >= SIZE:
-                continue
-            if walls.count([n[0], n[1]]) > 0:
                 continue
             neighbor = Node(n[0], n[1], current)
             neighbors.append(neighbor)
-    if finish is not None:
+    move = []
+    finish = []
+    if start is not None:
         while current.parent is not None:
-            move_x = int((current.parent.x - current.x) / SIZE_ONE_CELL)
-            move_y = int((current.parent.y - current.y) / SIZE_ONE_CELL)
+            finish.append(current)
+            current = current.parent
+        i = finish.__len__() - 1
+        while i > 0:
+            move_x = int((finish[i].x - currentXY.x) / SIZE_ONE_CELL)
+            move_y = int((finish[i].y - currentXY.y) / SIZE_ONE_CELL)
             if move_x < 0:
                 move.append('l')
             if move_x > 0:
@@ -205,8 +195,9 @@ def check_fog_of_war():
                 move.append('u')
             if move_y > 0:
                 move.append('d')
-            current = current.parent
-        move.append([finish.x, finish.y, 1])
+            currentXY = finish[i]
+            i = i -1
+        move.append([start.x, start.y, 1])
     return move
 def check_awards():
     three = []
@@ -310,9 +301,14 @@ while True:
                 create_map()
                 visibility()
             elif event.key == pygame.K_SPACE:
-                for i in range(50):
+                MAX_ITER = 200
+                i = 0
+                while True:
                     move = alghoritm_move()
                     for m in move:
+                        if i == MAX_ITER:
+                            time.sleep(1)
+                            exit()
                         directions = {'r' : "right", 'l' :"left", 'u':"up", 'd':"down"}
                         pacman.direction = directions[m]
                         pacman.move()
@@ -322,6 +318,7 @@ while True:
                         pacman.draw()
                         pygame.display.flip()
                         pygame.time.delay(100)
+                        i = i + 1
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
