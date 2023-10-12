@@ -74,7 +74,7 @@ COUNT_OF_CELL = 11
 SIZE_ONE_CELL = 50
 SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
 COUNT_OF_WALL =8
-COUNT_OF_AWARDS = 12
+COUNT_OF_AWARDS = 25
 
 pacman = Pacman(SIZE/2 - SIZE_ONE_CELL/2, SIZE/2 - SIZE_ONE_CELL/2)
 
@@ -83,7 +83,7 @@ pygame.display.set_caption('pacman')
 
 #добавляем стены
 random_number_of_maps = random.randint(1,100)
-walls_ = read_list_from_line('maps.txt', random_number_of_maps)
+walls_ = read_list_from_line('maps.txt', 1)
 walls = []
 for w in walls_:
   walls.append(list(w))
@@ -116,6 +116,7 @@ def score_count():
             score += 1
     score_text = score_font.render("Счёт: {}".format(score), True, (255, 255, 255))  # для отображения
     sc.blit(score_text, (2, 2))
+    return score
 
 pacman.draw()
 def create_map():
@@ -151,6 +152,7 @@ def clear_fog(m):
 for m in map:
     if [m[0], m[1]] in [[200, 200], [250, 200], [300, 200], [200, 250], [250, 250], [300, 250], [200, 300], [250, 300], [300, 300]]:
         clear_fog(m)
+
 
 def is_fog(position):
     for m in map:
@@ -245,30 +247,52 @@ def alghoritm_move():
         best_way = check_fog_of_war()
         best_way[-1][2] = 1
         best_way.pop()
+    update_map(best_way)
+    return best_way
+
+
+def update_map(best_way):
     currentXY = [pacman.x, pacman.y]
     for bv in best_way:
         if bv == 'l':
             for m in map:
-                if [m[0], m[1]] in [[currentXY[0] - 2*SIZE_ONE_CELL, currentXY[1]], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL], [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
+                if [m[0], m[1]] in [[currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1]],
+                                    [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL],
+                                    [currentXY[0] - 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
                     clear_fog(m)
             currentXY[0] = currentXY[0] - SIZE_ONE_CELL
         elif bv == 'r':
             for m in map:
-                if [m[0], m[1]] in [[currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1]], [currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL], [currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
+                if [m[0], m[1]] in [[currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1]],
+                                    [currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1] - SIZE_ONE_CELL],
+                                    [currentXY[0] + 2 * SIZE_ONE_CELL, currentXY[1] + SIZE_ONE_CELL]]:
                     clear_fog(m)
             currentXY[0] = currentXY[0] + SIZE_ONE_CELL
         elif bv == 'u':
             for m in map:
-                if [m[0], m[1]] in [[currentXY[0], currentXY[1] - 2 * SIZE_ONE_CELL], [currentXY[0] - SIZE_ONE_CELL, currentXY[1] - 2 * SIZE_ONE_CELL], [currentXY[0] + SIZE_ONE_CELL, currentXY[1] - 2* SIZE_ONE_CELL]]:
+                if [m[0], m[1]] in [[currentXY[0], currentXY[1] - 2 * SIZE_ONE_CELL],
+                                    [currentXY[0] - SIZE_ONE_CELL, currentXY[1] - 2 * SIZE_ONE_CELL],
+                                    [currentXY[0] + SIZE_ONE_CELL, currentXY[1] - 2 * SIZE_ONE_CELL]]:
                     clear_fog(m)
             currentXY[1] = currentXY[1] - SIZE_ONE_CELL
         elif bv == 'd':
             for m in map:
-                if [m[0], m[1]] in [[currentXY[0], currentXY[1] + 2 * SIZE_ONE_CELL], [currentXY[0] - SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL], [currentXY[0] + SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL]]:
+                if [m[0], m[1]] in [[currentXY[0], currentXY[1] + 2 * SIZE_ONE_CELL],
+                                    [currentXY[0] - SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL],
+                                    [currentXY[0] + SIZE_ONE_CELL, currentXY[1] + 2 * SIZE_ONE_CELL]]:
                     clear_fog(m)
             currentXY[1] = currentXY[1] + SIZE_ONE_CELL
-    return best_way
 
+def write_map():
+    with open('data.txt', 'a') as file:
+        for m_ in map:
+            file.write(str(m_) + ' ')
+        file.write(str([int(pacman.x), int(pacman.y)]))
+        file.write('\n')
+def write_awards():
+    with open('count_awards.txt', 'a') as file:
+        file.write(str(score_count()))
+        file.write('\n')
 create_map()
 visibility()
 pygame.display.flip()
@@ -277,38 +301,49 @@ while True:
         if event.type == pygame.QUIT:
             exit()
         if score == COUNT_OF_AWARDS:
+            write_awards()
             time.sleep(1)
             exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
+                write_map()
                 pacman.direction = "right"
                 pacman.move()
                 create_map()
                 visibility()
             elif event.key == pygame.K_LEFT:
+                write_map()
                 pacman.direction = "left"
                 pacman.move()
                 create_map()
                 visibility()
             elif event.key == pygame.K_UP:
+                write_map()
                 pacman.direction = "up"
                 pacman.move()
                 create_map()
                 visibility()
             elif event.key == pygame.K_DOWN:
+                write_map()
                 pacman.direction = "down"
                 pacman.move()
                 create_map()
                 visibility()
             elif event.key == pygame.K_SPACE:
-                MAX_ITER = 200
+                MAX_ITER = 50
                 i = 0
                 while True:
                     move = alghoritm_move()
                     for m in move:
                         if i == MAX_ITER:
                             time.sleep(1)
+                            write_awards()
                             exit()
+                        if score == COUNT_OF_AWARDS:
+                            time.sleep(1)
+                            exit()
+                        write_map()
+
                         directions = {'r' : "right", 'l' :"left", 'u':"up", 'd':"down"}
                         pacman.direction = directions[m]
                         pacman.move()
@@ -319,6 +354,7 @@ while True:
                         pygame.display.flip()
                         pygame.time.delay(100)
                         i = i + 1
+
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
     pacman.draw()
