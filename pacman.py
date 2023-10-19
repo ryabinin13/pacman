@@ -153,7 +153,6 @@ for m in map:
     if [m[0], m[1]] in [[200, 200], [250, 200], [300, 200], [200, 250], [250, 250], [300, 250], [200, 300], [250, 300], [300, 300]]:
         clear_fog(m)
 
-
 def is_fog(position):
     for m in map:
         if (position.x == m[0]) and (position.y == m[1]) and (m[2] == 0):
@@ -247,11 +246,10 @@ def alghoritm_move():
         best_way = check_fog_of_war()
         best_way[-1][2] = 1
         best_way.pop()
-    update_map(best_way)
+    change_map(best_way)
     return best_way
 
-
-def update_map(best_way):
+def change_map(best_way):
     currentXY = [pacman.x, pacman.y]
     for bv in best_way:
         if bv == 'l':
@@ -287,8 +285,12 @@ def write_map():
     with open('data.txt', 'a') as file:
         for m_ in map:
             file.write(str(m_) + ' ')
-        file.write(str([int(pacman.x), int(pacman.y)]))
+        file.write(str([int(pacman.x), int(pacman.y), 5]))
         file.write('\n')
+def write_move():
+    with open('move.txt', 'a') as file:
+        file.write(str([int(pacman.x), int(pacman.y)]))
+        file.write(' ')
 def write_awards():
     with open('count_awards.txt', 'a') as file:
         file.write(str(score_count()))
@@ -296,36 +298,38 @@ def write_awards():
 create_map()
 visibility()
 pygame.display.flip()
+# with open('data.txt', 'a') as file:
+#     file.write(str(random_number_of_maps))
+#     file.write('\n')
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             exit()
         if score == COUNT_OF_AWARDS:
-            write_awards()
             time.sleep(1)
             exit()
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_RIGHT:
-                write_map()
                 pacman.direction = "right"
+                change_map(['r'])
                 pacman.move()
                 create_map()
                 visibility()
             elif event.key == pygame.K_LEFT:
-                write_map()
                 pacman.direction = "left"
+                change_map(['l'])
                 pacman.move()
                 create_map()
                 visibility()
             elif event.key == pygame.K_UP:
-                write_map()
                 pacman.direction = "up"
+                change_map(['u'])
                 pacman.move()
                 create_map()
                 visibility()
             elif event.key == pygame.K_DOWN:
-                write_map()
                 pacman.direction = "down"
+                change_map(['d'])
                 pacman.move()
                 create_map()
                 visibility()
@@ -338,12 +342,14 @@ while True:
                         if i == MAX_ITER:
                             time.sleep(1)
                             write_awards()
+                            with open('move.txt', 'a') as file:
+                                file.write('\n')
                             exit()
                         if score == COUNT_OF_AWARDS:
                             time.sleep(1)
                             exit()
                         write_map()
-
+                        write_move()
                         directions = {'r' : "right", 'l' :"left", 'u':"up", 'd':"down"}
                         pacman.direction = directions[m]
                         pacman.move()
