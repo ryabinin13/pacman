@@ -1,5 +1,6 @@
 import keras
-from keras.layers import Dense, SimpleRNN, Input
+from sklearn.model_selection import train_test_split
+from keras.layers import Dense, SimpleRNN, Input, LSTM
 from keras.utils import to_categorical
 import numpy as np
 
@@ -37,62 +38,56 @@ def read_move(filename, line_number, separator=' '):
         print("Ошибка")
 
 data_X = []
-for i in range(50):
+for i in range(1, 501):
     line = read_data('data.txt', i)
     line_list = []
     for l in line:
-        line_list.append(list(l))
+        res = [l[0]/500, l[1]/500, l[2]]
+        line_list.append(res)
     data_X.append(line_list)
 
 X = np.array(data_X)
 
-i = 0
-for d in X:
-    print(f"{i} значение {d}")
-    i = i +1
+pacman_coord = []
+for i in range(10):
+    data_y = read_move('move.txt', i)
+    for d in data_y:
+        pacman_coord.append(list(d))
 
-data_y = read_move('move.txt', 1)
-y_ = []
-for d in data_y:
-  y_.append(list(d))
-print(y_)
-
-for i in range(len(y_) - 1):
-    forx = y_[i + 1][0] - y_[i][0]
-    fory = y_[i + 1][1] - y_[i][1]
+correctY = []
+for i in range(len(pacman_coord) - 1):
+    forx = pacman_coord[i + 1][0] - pacman_coord[i][0]
+    fory = pacman_coord[i + 1][1] - pacman_coord[i][1]
     if (fory == 50 and forx == 0):
-        y_[i] = 0
-    if (fory == -50 and forx == 0):
-        y_[i] = 1
-    if (fory == 0 and forx == 50):
-        y_[i] = 2
-    if (fory == 0 and forx == -50):
-        y_[i] = 3
-y_[-1] = 0
+        correctY.append(0)
+    elif (fory == -50 and forx == 0):
+        correctY.append(1)
+    elif (fory == 0 and forx == 50):
+        correctY.append(2)
+    elif (fory == 0 and forx == -50):
+        correctY.append(3)
 
-y_categorical= np.array(y_)
-y = to_categorical(y_categorical)
 
-print(y)
-print(X.shape)
-print(y.shape)
 
+Y= np.array(correctY)
+y = to_categorical(Y)
+
+print(X[0])
+print(y[0])
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+print(X_train.shape)
+print(y_train.shape)
 model = keras.Sequential()
-model.add(Input(shape=(122, 3)))
-model.add(SimpleRNN(128, activation='tanh'))
+model.add(LSTM(64,input_shape=(121,3), activation='relu'))
+#model.add(Input(shape=(122, 3)))
+#model.add(Dense(128, activation='relu'))
 model.add(Dense(4, activation='softmax'))
 model.summary()
 
 model.compile(loss = 'categorical_crossentropy', metrics=['accuracy'], optimizer='adam')
 
-result = model.fit(X, y, batch_size=11, epochs=100)
+model.fit(X_train, y_train, batch_size=10, epochs=200)
 
-test_file = read_data('data.txt', 1)
-test_ = []
-for w in test_file:
-  test_.append(list(w))
-test = np.array(test_)
-
-new_arr = np.expand_dims(test, axis=0)
-print(model.predict(new_arr))
-
+scores = model.evaluate(X_test, y_test)
+print(scores[1])
