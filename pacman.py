@@ -1,10 +1,16 @@
 import time
+
+import numpy as np
 import pygame
 import random
+import keras
+from keras.models import load_model
 pygame.init()
 
 score = 0 #счетчик очков
 game_over_font = pygame.font.SysFont("Arial", 60)
+
+
 
 class Pacman:
     def __init__(self, x, y):
@@ -251,6 +257,8 @@ def mark_pacman(x, y):
             m[2] = 4
             break
 
+model =load_model('NN.h5')
+
 COUNT_OF_CELL = 11
 SIZE_ONE_CELL = 50
 SIZE = COUNT_OF_CELL * SIZE_ONE_CELL
@@ -263,8 +271,8 @@ sc = pygame.display.set_mode((SIZE, SIZE))
 pygame.display.set_caption('pacman')
 
 #добавляем стены
-random_number_of_maps = random.randint(1,100)
-walls_ = read_list_from_line('maps.txt', 2)
+random_number_of_maps = random.randint(1,30)
+walls_ = read_list_from_line('maps.txt', random_number_of_maps)
 walls = []
 for w in walls_:
   walls.append(list(w))
@@ -307,7 +315,7 @@ pygame.display.flip()
 #     file.write(str(random_number_of_maps))
 #     file.write('\n')
 mark_pacman(pacman.x, pacman.y)
-write_map()
+#write_map()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -369,8 +377,9 @@ while True:
                         pygame.time.delay(1)
                         i = i + 1
                         mark_pacman(pacman.x, pacman.y)
-                        if i != (MAX_ITER - 1):
+                        if i != (MAX_ITER):
                             write_map()
+
 
     pygame.draw.rect(sc, (0, 0, 0), (2, 2, 90, 25))
     score_count()
